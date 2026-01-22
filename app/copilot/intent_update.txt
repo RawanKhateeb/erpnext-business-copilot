@@ -1,0 +1,8 @@
+Add these lines to intent.py in parse_intent() function:
+
+    # Price anomalies
+    if "price" in q and ("anomal" in q or "unusual" in q or "expensive" in q or "high" in q):
+        return {"intent": "detect_price_anomalies"}
+    
+    if "anomal" in q or "price anomal" in q or "expensive supplier" in q:
+        return {"intent": "detect_price_anomalies"}
