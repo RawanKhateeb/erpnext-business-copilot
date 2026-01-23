@@ -810,14 +810,14 @@
             }
         }
 
-        function sendViaEmail(data, intent) {
+        function sendViaEmail(data, intent, button) {
             const email = prompt('Enter recipient email address:', 'manager@company.com');
             if (!email) return; // User cancelled
             
             // Show loading message
-            const originalButtonText = event.target.textContent;
-            event.target.textContent = '📧 Sending...';
-            event.target.disabled = true;
+            const originalButtonText = button.textContent;
+            button.textContent = '📧 Sending...';
+            button.disabled = true;
             
             fetch('/send/email', {
                 method: 'POST',
@@ -837,13 +837,13 @@
                 } else {
                     alert('✗ Error: ' + result.message);
                 }
-                event.target.textContent = originalButtonText;
-                event.target.disabled = false;
+                button.textContent = originalButtonText;
+                button.disabled = false;
             })
             .catch(error => {
                 alert('✗ Failed to send email: ' + error.message);
-                event.target.textContent = originalButtonText;
-                event.target.disabled = false;
+                button.textContent = originalButtonText;
+                button.disabled = false;
             });
         }
 
@@ -1172,7 +1172,7 @@
                     emailButton.style.borderColor = '#3498db';
                     emailButton.style.color = '#3498db';
                     emailButton.type = 'button';
-                    emailButton.onclick = () => sendViaEmail(data, data.intent);
+                    emailButton.onclick = () => sendViaEmail(data, data.intent, emailButton);
                     exportSection.appendChild(emailButton);
                     
                     exportSection.classList.remove('hidden');
