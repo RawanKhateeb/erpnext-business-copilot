@@ -399,6 +399,158 @@
             border-left-color: #f44;
         }
 
+        .approval-decision {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            margin: 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .approval-decision.approve {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .approval-decision.review {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .approval-decision.reject {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .approval-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .approval-section h3 {
+            color: #333;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            color: #667eea;
+        }
+
+        .approval-summary {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .findings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .findings-list li {
+            padding: 8px 0;
+            font-size: 13px;
+            color: #555;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .findings-list li:last-child {
+            border-bottom: none;
+        }
+
+        .findings-list li::before {
+            content: '';
+            margin-right: 8px;
+        }
+
+        .next-actions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .next-actions-list li {
+            padding: 12px;
+            background: #f0f7ff;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .next-actions-list li::before {
+            content: '→ ';
+            color: #667eea;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .evidence-table-wrapper {
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .evidence-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: white;
+        }
+
+        .evidence-table th {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            border: none;
+        }
+
+        .evidence-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #555;
+        }
+
+        .evidence-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .anomaly-badge {
+            display: inline-block;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
         .error .intent-badge {
             background: #f44;
         }
@@ -468,6 +620,10 @@
         <div id="responseArea" class="response-area">
             <span id="intentBadge" class="intent-badge"></span>
             <p id="answer" class="message"></p>
+            <div id="approvalSection" class="hidden">
+                <div id="approvalDecision" class="approval-decision"></div>
+                <div id="approvalContent"></div>
+            </div>
             <div id="insightsSection" class="insights-section hidden">
                 <h4>Recommendations</h4>
                 <ul id="insightsList"></ul>
@@ -556,6 +712,14 @@
                 columns = ['name'];
             } else if (intent === 'list_items') {
                 columns = ['name', 'item_name'];
+            } else if (intent === 'list_customers') {
+                columns = ['name'];
+            } else if (intent === 'list_sales_orders') {
+                columns = ['name', 'customer', 'transaction_date', 'status', 'grand_total'];
+            } else if (intent === 'list_sales_invoices') {
+                columns = ['name', 'customer', 'posting_date', 'status', 'grand_total'];
+            } else if (intent === 'list_vendor_bills') {
+                columns = ['name', 'supplier', 'posting_date', 'status', 'grand_total'];
             } else if (intent === 'list_purchase_orders') {
                 columns = ['name', 'supplier', 'transaction_date', 'status', 'grand_total'];
             } else {
@@ -654,6 +818,14 @@
                 columns = ['name'];
             } else if (intent === 'list_items' && Array.isArray(data)) {
                 columns = ['name', 'item_name'];
+            } else if (intent === 'list_customers' && Array.isArray(data)) {
+                columns = ['name'];
+            } else if (intent === 'list_sales_orders' && Array.isArray(data)) {
+                columns = ['name', 'customer', 'transaction_date', 'status', 'grand_total'];
+            } else if (intent === 'list_sales_invoices' && Array.isArray(data)) {
+                columns = ['name', 'customer', 'posting_date', 'status', 'grand_total'];
+            } else if (intent === 'list_vendor_bills' && Array.isArray(data)) {
+                columns = ['name', 'supplier', 'posting_date', 'status', 'grand_total'];
             } else if (intent === 'list_purchase_orders' && Array.isArray(data)) {
                 columns = ['name', 'supplier', 'transaction_date', 'status', 'grand_total'];
             } else {
@@ -686,11 +858,11 @@
                 columns.forEach(col => {
                     let value = row[col] || '-';
                     // Format currency
-                    if (col === 'grand_total' && typeof value === 'number') {
+                    if ((col === 'grand_total' || col === 'total') && typeof value === 'number') {
                         value = value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
                     }
                     // Format date
-                    if (col === 'transaction_date' && value !== '-') {
+                    if ((col === 'transaction_date' || col === 'posting_date') && value !== '-') {
                         value = new Date(value).toLocaleDateString('en-US');
                     }
                     html += `<td>${value}</td>`;
@@ -783,8 +955,83 @@
             rawDataSection.innerHTML = '';
             nextQuestionsContainer.innerHTML = '';
 
+            // Handle approval-specific rendering
+            const approvalSection = document.getElementById('approvalSection');
+            const approvalDecision = document.getElementById('approvalDecision');
+            const approvalContent = document.getElementById('approvalContent');
+            
+            if (data.intent === 'approve_po') {
+                // Render approval decision
+                approvalContent.innerHTML = '';
+                
+                // Set decision badge
+                const decision = data.answer.match(/Decision: (\w+)/)?.[1] || 'UNKNOWN';
+                approvalDecision.textContent = decision;
+                approvalDecision.className = 'approval-decision ';
+                if (decision === 'APPROVE') {
+                    approvalDecision.classList.add('approve');
+                } else if (decision === 'REVIEW') {
+                    approvalDecision.classList.add('review');
+                } else if (decision === 'DO NOT APPROVE') {
+                    approvalDecision.classList.add('reject');
+                }
+                
+                // Summary
+                if (data.summary) {
+                    const summaryHtml = `<div class="approval-section">
+                        <h3>Summary</h3>
+                        <div class="approval-summary">${data.summary}</div>
+                    </div>`;
+                    approvalContent.innerHTML += summaryHtml;
+                }
+                
+                // Findings
+                if (data.findings && data.findings.length > 0) {
+                    let findingsHtml = '<div class="approval-section"><h3>Findings</h3><ul class="findings-list">';
+                    data.findings.forEach(finding => {
+                        findingsHtml += `<li>${finding}</li>`;
+                    });
+                    findingsHtml += '</ul></div>';
+                    approvalContent.innerHTML += findingsHtml;
+                }
+                
+                // Evidence table
+                if (data.evidence && data.evidence.length > 0) {
+                    let evidenceHtml = '<div class="approval-section"><h3>Price Analysis</h3><div class="evidence-table-wrapper"><table class="evidence-table"><thead><tr><th>Item Code</th><th>Current Rate</th><th>Avg Rate</th><th>Delta</th><th>Status</th></tr></thead><tbody>';
+                    data.evidence.forEach(row => {
+                        const isAnom = row.status && row.status.includes('ANOMALY');
+                        evidenceHtml += `<tr>
+                            <td><strong>${row.item_code || 'N/A'}</strong></td>
+                            <td>${row.rate || 'N/A'}</td>
+                            <td>${row.avg_rate || 'N/A'}</td>
+                            <td>${row.delta || 'N/A'}</td>
+                            <td>${isAnom ? '<span class="anomaly-badge">' + row.status + '</span>' : '<span class="status-badge">' + row.status + '</span>'}</td>
+                        </tr>`;
+                    });
+                    evidenceHtml += '</tbody></table></div></div>';
+                    approvalContent.innerHTML += evidenceHtml;
+                }
+                
+                // Next actions
+                if (data.next_actions && data.next_actions.length > 0) {
+                    let actionsHtml = '<div class="approval-section"><h3>Recommended Actions</h3><ul class="next-actions-list">';
+                    data.next_actions.forEach(action => {
+                        actionsHtml += `<li>${action}</li>`;
+                    });
+                    actionsHtml += '</ul></div>';
+                    approvalContent.innerHTML += actionsHtml;
+                }
+                
+                approvalSection.classList.remove('hidden');
+                insightsSection.classList.add('hidden');
+                dataSection.classList.add('hidden');
+                exportSection.classList.add('hidden');
+            } else {
+                approvalSection.classList.add('hidden');
+            }
+
             // Handle data rendering
-            if (data.data && Object.keys(data.data).length > 0) {
+            if (data.data && Object.keys(data.data).length > 0 && data.intent !== 'approve_po') {
                 const intent = data.intent;
                 
                 // Special handling for single PO

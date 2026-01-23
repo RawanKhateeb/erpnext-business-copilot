@@ -5,6 +5,7 @@ from app.erpnext_client import ERPNextClient
 from app.insights import build_purchase_order_insights
 from app.price_anomaly_detector import detect_price_anomalies
 from app.delayed_orders_detector import detect_delayed_orders
+from app.po_approval_analyzer import analyze_po_approval
 
 
 def generate_monthly_report(pos: List[Dict]) -> tuple[str, List[str]]:
@@ -196,6 +197,42 @@ def handle_user_input(text: str) -> Dict[str, Any]:
     intent = parsed.get("intent")
 
     try:
+        if intent == "approve_po":
+            # Handle PO approval request
+            po_name = parsed.get("po_name")
+            
+            if not po_name:
+                return {
+                    "intent": intent,
+                    "answer": "Please specify which purchase order to review. For example: 'Should I approve PUR-ORD-2026-00001?'",
+                    "insights": [],
+                    "data": {},
+                    "next_questions": [
+                        "Show purchase orders",
+                        "List suppliers",
+                        "What's the total spend?"
+                    ]
+                }
+            
+            # Analyze the PO
+            analysis = analyze_po_approval(po_name, client)
+            
+            return {
+                "intent": intent,
+                "answer": f"Approval Analysis for {po_name}\n\nDecision: {analysis['decision']}",
+                "summary": analysis['summary'],
+                "findings": analysis['findings'],
+                "evidence": analysis['evidence'],
+                "next_actions": analysis['next_actions'],
+                "insights": analysis['findings'],
+                "data": analysis.get('evidence', []),
+                "next_questions": [
+                    "Explain why you recommend " + analysis['decision'],
+                    "What would you change to make this approvable?",
+                    "Compare this PO with last 3 orders from " + (analysis.get('po_data', {}).get('supplier', 'supplier'))
+                ]
+            }
+        
         if intent == "list_suppliers":
             data = client.list_suppliers()
             insights, next_questions = generate_suppliers_insights(data)

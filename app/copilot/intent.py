@@ -8,8 +8,17 @@ def parse_intent(text: str) -> Dict[str, Any]:
     - Understands suppliers/items/purchase orders
     - Can extract a Purchase Order name if the user typed it (e.g., PUR-ORD-2026-00001)
     - Can detect report generation requests
+    - Can recognize PO approval requests
     """
     q = (text or "").strip().lower()
+
+    # PO Approval - check FIRST (most specific)
+    if "approve" in q or "should i approve" in q or "can i approve" in q:
+        # Extract PO name if present (e.g., "Should I approve PUR-ORD-2026-00001?")
+        m = re.search(r"(pur-ord-\d{4}-\d{5})", q)
+        if m:
+            return {"intent": "approve_po", "po_name": m.group(1).upper()}
+        return {"intent": "approve_po"}
 
     # Price anomalies - check FIRST
     if "expensive" in q or "anomal" in q or "overpriced" in q or "unusual" in q:
