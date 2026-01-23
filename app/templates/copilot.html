@@ -551,6 +551,117 @@
             font-size: 11px;
         }
 
+        /* Explanation Section */
+        .explanation-section {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        .explanation-section h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #explanationContent {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .explanation-summary {
+            background: #f0f7ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 3px solid #667eea;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .explanation-reasons {
+            margin-bottom: 15px;
+        }
+
+        .explanation-reasons h4 {
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .reason-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #e0e0e0;
+        }
+
+        .reason-item:hover {
+            border-left-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .reason-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .reason-evidence {
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .explanation-actions {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .explanation-actions h4 {
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .explanation-actions ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .explanation-actions li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 13px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .explanation-actions li:last-child {
+            border-bottom: none;
+        }
+
+        .explanation-actions li::before {
+            content: '✓ ';
+            color: #667eea;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
         .error .intent-badge {
             background: #f44;
         }
@@ -620,6 +731,10 @@
         <div id="responseArea" class="response-area">
             <span id="intentBadge" class="intent-badge"></span>
             <p id="answer" class="message"></p>
+            <div id="explanationSection" class="explanation-section hidden">
+                <h3>📋 Why These Recommendations?</h3>
+                <div id="explanationContent"></div>
+            </div>
             <div id="approvalSection" class="hidden">
                 <div id="approvalDecision" class="approval-decision"></div>
                 <div id="approvalContent"></div>
@@ -971,6 +1086,8 @@
             const approvalDecision = document.getElementById('approvalDecision');
             const approvalContent = document.getElementById('approvalContent');
             const exportSection = document.getElementById('exportSection');
+            const explanationSection = document.getElementById('explanationSection');
+            const explanationContent = document.getElementById('explanationContent');
 
             // Set intent badge
             intentBadge.textContent = data.intent || 'Unknown';
@@ -989,6 +1106,46 @@
                 insightsSection.classList.remove('hidden');
             } else {
                 insightsSection.classList.add('hidden');
+            }
+
+            // Render explanation
+            explanationContent.innerHTML = '';
+            if (data.explanation) {
+                const exp = data.explanation;
+                let html = '';
+                
+                // Summary
+                if (exp.summary) {
+                    html += `<div class="explanation-summary">${exp.summary}</div>`;
+                }
+                
+                // Reasons
+                if (exp.reasons && exp.reasons.length > 0) {
+                    html += '<div class="explanation-reasons"><h4>Reasons</h4>';
+                    exp.reasons.forEach(reason => {
+                        html += `
+                            <div class="reason-item">
+                                <div class="reason-title">${reason.recommendation}</div>
+                                <div class="reason-evidence">Evidence: ${reason.evidence}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+                
+                // Next Actions
+                if (exp.next_actions && exp.next_actions.length > 0) {
+                    html += '<div class="explanation-actions"><h4>Next Actions</h4><ul>';
+                    exp.next_actions.forEach(action => {
+                        html += `<li>${action}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                
+                explanationContent.innerHTML = html;
+                explanationSection.classList.remove('hidden');
+            } else {
+                explanationSection.classList.add('hidden');
             }
 
             // Clear previous content

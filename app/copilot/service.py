@@ -6,6 +6,7 @@ from app.insights import build_purchase_order_insights
 from app.price_anomaly_detector import detect_price_anomalies
 from app.delayed_orders_detector import detect_delayed_orders
 from app.po_approval_analyzer import analyze_po_approval
+from app.recommendation_explainer import explain_recommendations
 
 
 def generate_monthly_report(pos: List[Dict]) -> tuple[str, List[str]]:
@@ -262,6 +263,9 @@ def handle_user_input(text: str) -> Dict[str, Any]:
             # Build business insights
             po_insights = build_purchase_order_insights(data)
             
+            # Generate explanation
+            explanation = explain_recommendations(intent, user_question, data, insights, insights)
+            
             return {
                 "intent": intent,
                 "answer": f"Displaying {len(data)} purchase orders. Total spend: {po_insights['total_spend_formatted']}.",
@@ -270,6 +274,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 "next_questions": next_questions,
                 "metrics": po_insights,  # Include detailed business metrics
                 "recommendations": po_insights.get("recommendations", []),
+                "explanation": explanation
             }
 
         if intent == "get_purchase_order":
@@ -320,14 +325,20 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 "What items do we purchase?"
             ]
             
+            # Generate explanation
+            data_dict = {"total_spend": total, "po_count": len(pos), "completed_count": completed, 
+                        "average_order_value": po_insights["average_order_value"]}
+            explanation = explain_recommendations(intent, user_question, data_dict, insights, insights)
+            
             return {
                 "intent": intent,
                 "answer": f"Your total spend is {po_insights['total_spend_formatted']} across {len(pos)} orders.",
                 "insights": insights[:3],
-                "data": {"total_spend": total, "po_count": len(pos), "completed_count": completed},
+                "data": data_dict,
                 "next_questions": next_questions,
                 "metrics": po_insights,
                 "recommendations": po_insights.get("recommendations", []),
+                "explanation": explanation
             }
 
         if intent == "monthly_report":
@@ -377,6 +388,9 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 insights = anomaly_results["recommendations"]
                 anomaly_data = anomaly_results["anomalies"]
             
+            # Generate explanation
+            explanation = explain_recommendations(intent, user_question, anomaly_data, insights, insights)
+            
             return {
                 "intent": "detect_price_anomalies",
                 "answer": answer,
@@ -389,7 +403,8 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                     "Show competitive prices"
                 ],
                 "anomaly_summary": anomaly_results["summary"],
-                "recommendations": anomaly_results["recommendations"]
+                "recommendations": anomaly_results["recommendations"],
+                "explanation": explanation
             }
 
         if intent == "detect_delayed_orders":
@@ -405,6 +420,9 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 insights = delay_results["recommendations"]
                 delay_data = delay_results["delayed_orders"]
             
+            # Generate explanation
+            explanation = explain_recommendations(intent, user_question, delay_data, insights, insights)
+            
             return {
                 "intent": "detect_delayed_orders",
                 "answer": answer,
@@ -418,7 +436,8 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 ],
                 "delay_summary": delay_results["summary"],
                 "supplier_performance": delay_results["supplier_performance"],
-                "recommendations": delay_results["recommendations"]
+                "recommendations": delay_results["recommendations"],
+                "explanation": explanation
             }
 
         if intent == "list_customers":
@@ -429,6 +448,10 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 "Review customer payment status and outstanding amounts.",
                 "Monitor customer concentration risk."
             ]
+            
+            # Generate explanation
+            explanation = explain_recommendations(intent, user_question, data, insights, insights)
+            
             return {
                 "intent": "list_customers",
                 "answer": answer,
@@ -438,7 +461,8 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                     "Show sales orders",
                     "List invoices",
                     "What's our revenue?"
-                ]
+                ],
+                "explanation": explanation
             }
 
         if intent == "list_sales_orders":
