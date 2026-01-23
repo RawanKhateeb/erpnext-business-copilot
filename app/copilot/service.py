@@ -264,7 +264,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
             po_insights = build_purchase_order_insights(data)
             
             # Generate explanation
-            explanation = explain_recommendations(intent, user_question, data, insights, insights)
+            explanation = explain_recommendations(intent, text, data, insights, insights)
             
             return {
                 "intent": intent,
@@ -328,7 +328,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
             # Generate explanation
             data_dict = {"total_spend": total, "po_count": len(pos), "completed_count": completed, 
                         "average_order_value": po_insights["average_order_value"]}
-            explanation = explain_recommendations(intent, user_question, data_dict, insights, insights)
+            explanation = explain_recommendations(intent, text, data_dict, insights, insights)
             
             return {
                 "intent": intent,
@@ -389,7 +389,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 anomaly_data = anomaly_results["anomalies"]
             
             # Generate explanation
-            explanation = explain_recommendations(intent, user_question, anomaly_data, insights, insights)
+            explanation = explain_recommendations(intent, text, anomaly_data, insights, insights)
             
             return {
                 "intent": "detect_price_anomalies",
@@ -421,7 +421,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 delay_data = delay_results["delayed_orders"]
             
             # Generate explanation
-            explanation = explain_recommendations(intent, user_question, delay_data, insights, insights)
+            explanation = explain_recommendations(intent, text, delay_data, insights, insights)
             
             return {
                 "intent": "detect_delayed_orders",
@@ -450,7 +450,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
             ]
             
             # Generate explanation
-            explanation = explain_recommendations(intent, user_question, data, insights, insights)
+            explanation = explain_recommendations(intent, text, data, insights, insights)
             
             return {
                 "intent": "list_customers",
