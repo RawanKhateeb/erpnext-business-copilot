@@ -59,3 +59,64 @@ class ERPNextClient:
         r = requests.get(url, headers=self.headers, timeout=20)
         r.raise_for_status()
         return r.json().get("data", {})
+
+    # -------------------------
+    # Customers
+    # -------------------------
+    def list_customers(self, limit: int = 100):
+        url = f"{self.base}/api/resource/Customer"
+        params = {
+            "limit_page_length": limit,
+        }
+        r = requests.get(url, headers=self.headers, params=params, timeout=20)
+        r.raise_for_status()
+        return r.json().get("data", [])
+
+    # -------------------------
+    # Sales Orders
+    # -------------------------
+    def list_sales_orders(self, limit: int = 50):
+        doctype = quote("Sales Order")
+        url = f"{self.base}/api/resource/{doctype}"
+        params = {
+            "fields": '["name","customer","transaction_date","status","grand_total","delivery_date"]',
+            "limit_page_length": limit,
+        }
+        r = requests.get(url, headers=self.headers, params=params, timeout=20)
+        r.raise_for_status()
+        return r.json().get("data", [])
+
+    def get_sales_order(self, so_name: str):
+        doctype = quote("Sales Order")
+        url = f"{self.base}/api/resource/{doctype}/{so_name}"
+        r = requests.get(url, headers=self.headers, timeout=20)
+        r.raise_for_status()
+        return r.json().get("data", {})
+
+    # -------------------------
+    # Sales Invoices
+    # -------------------------
+    def list_sales_invoices(self, limit: int = 50):
+        doctype = quote("Sales Invoice")
+        url = f"{self.base}/api/resource/{doctype}"
+        params = {
+            "fields": '["name","customer","posting_date","status","grand_total","outstanding_amount"]',
+            "limit_page_length": limit,
+        }
+        r = requests.get(url, headers=self.headers, params=params, timeout=20)
+        r.raise_for_status()
+        return r.json().get("data", [])
+
+    # -------------------------
+    # Purchase Invoices (Vendor Bills)
+    # -------------------------
+    def list_vendor_bills(self, limit: int = 50):
+        doctype = quote("Purchase Invoice")
+        url = f"{self.base}/api/resource/{doctype}"
+        params = {
+            "fields": '["name","supplier","posting_date","status","grand_total","outstanding_amount"]',
+            "limit_page_length": limit,
+        }
+        r = requests.get(url, headers=self.headers, params=params, timeout=20)
+        r.raise_for_status()
+        return r.json().get("data", [])

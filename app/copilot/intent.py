@@ -23,6 +23,21 @@ def parse_intent(text: str) -> Dict[str, Any]:
     if ("slow" in q or "behind" in q) and ("delivery" in q or "order" in q):
         return {"intent": "detect_delayed_orders"}
 
+    # Customer queries
+    if "customer" in q:
+        return {"intent": "list_customers"}
+
+    # Sales Order queries
+    if "sales order" in q or "so" in q and "show" in q:
+        return {"intent": "list_sales_orders"}
+
+    # Invoice/Bill queries
+    if "invoice" in q or ("outstanding" in q and ("payment" in q or "amount" in q)):
+        return {"intent": "list_sales_invoices"}
+
+    if "vendor bill" in q or "bill" in q and "purchase" in q:
+        return {"intent": "list_vendor_bills"}
+
     # Purchase Order details if a PO name is mentioned
     m = re.search(r"(pur-ord-\d{4}-\d{5})", q)
     if m:

@@ -594,20 +594,54 @@
         function exportData(data, intent, format = 'csv') {
             if (!data) return;
 
-            if (Array.isArray(data)) {
-                const csv = arrayToCSV(data, intent);
-                if (csv) {
-                    const timestamp = new Date().toISOString().slice(0, 10);
-                    const filename = `${intent}_${timestamp}.${format}`;
-                    downloadCSV(csv, filename);
-                }
-            } else {
-                // Single object export
-                const csv = arrayToCSV([data], intent);
-                if (csv) {
-                    const timestamp = new Date().toISOString().slice(0, 10);
-                    const filename = `${intent}_${timestamp}.${format}`;
-                    downloadCSV(csv, filename);
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            if (format === 'pdf') {
+                // PDF export - send full response object
+                fetch('/export/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: data,
+                        intent: intent,
+                        title: `ERPNext Copilot - ${intent.replace('_', ' ').toUpperCase()}`
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('PDF export failed');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${intent}_${timestamp}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    alert('Failed to export PDF: ' + error.message);
+                    console.error('PDF export error:', error);
+                });
+            } else if (format === 'csv') {
+                // CSV export - handle data array
+                if (Array.isArray(data)) {
+                    const csv = arrayToCSV(data, intent);
+                    if (csv) {
+                        const filename = `${intent}_${timestamp}.${format}`;
+                        downloadCSV(csv, filename);
+                    }
+                } else {
+                    // Single object export
+                    const csv = arrayToCSV([data], intent);
+                    if (csv) {
+                        const filename = `${intent}_${timestamp}.${format}`;
+                        downloadCSV(csv, filename);
+                    }
                 }
             }
         }
@@ -839,6 +873,16 @@
                     csvButton.type = 'button';
                     csvButton.onclick = () => exportData(data.data, data.intent, 'csv');
                     exportSection.appendChild(csvButton);
+                    
+                    const pdfButton = document.createElement('button');
+                    pdfButton.className = 'export-button';
+                    pdfButton.textContent = '📄 Export as PDF';
+                    pdfButton.style.borderColor = '#e74c3c';
+                    pdfButton.style.color = '#e74c3c';
+                    pdfButton.type = 'button';
+                    pdfButton.onclick = () => exportData(data, data.intent, 'pdf');
+                    exportSection.appendChild(pdfButton);
+                    
                     exportSection.classList.remove('hidden');
                 } else {
                     exportSection.classList.add('hidden');

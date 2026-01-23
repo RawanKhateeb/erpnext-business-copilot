@@ -384,20 +384,102 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 "recommendations": delay_results["recommendations"]
             }
 
+        if intent == "list_customers":
+            data = client.list_customers()
+            answer = f"Found {len(data)} customers."
+            insights = [
+                f"You have {len(data)} active customers.",
+                "Review customer payment status and outstanding amounts.",
+                "Monitor customer concentration risk."
+            ]
+            return {
+                "intent": "list_customers",
+                "answer": answer,
+                "insights": insights,
+                "data": data,
+                "next_questions": [
+                    "Show sales orders",
+                    "List invoices",
+                    "What's our revenue?"
+                ]
+            }
+
+        if intent == "list_sales_orders":
+            data = client.list_sales_orders()
+            answer = f"Found {len(data)} sales orders."
+            insights = [
+                f"You have {len(data)} sales orders.",
+                "Review delivery dates to ensure on-time fulfillment.",
+                "Monitor sales order status and pending items."
+            ]
+            return {
+                "intent": "list_sales_orders",
+                "answer": answer,
+                "insights": insights,
+                "data": data,
+                "next_questions": [
+                    "List customers",
+                    "Show invoices",
+                    "Show purchase orders"
+                ]
+            }
+
+        if intent == "list_sales_invoices":
+            data = client.list_sales_invoices()
+            outstanding_total = sum(float(inv.get("outstanding_amount") or 0) for inv in data)
+            answer = f"Found {len(data)} invoices. Outstanding amount: ${outstanding_total:,.2f}"
+            insights = [
+                f"Total invoices: {len(data)}",
+                f"Outstanding receivables: ${outstanding_total:,.2f}",
+                "Review payment status and follow up on overdue payments."
+            ]
+            return {
+                "intent": "list_sales_invoices",
+                "answer": answer,
+                "insights": insights,
+                "data": data,
+                "next_questions": [
+                    "List customers",
+                    "Show sales orders",
+                    "Outstanding payments?"
+                ]
+            }
+
+        if intent == "list_vendor_bills":
+            data = client.list_vendor_bills()
+            outstanding_total = sum(float(bill.get("outstanding_amount") or 0) for bill in data)
+            answer = f"Found {len(data)} vendor bills. Outstanding amount: ${outstanding_total:,.2f}"
+            insights = [
+                f"Total vendor bills: {len(data)}",
+                f"Outstanding payables: ${outstanding_total:,.2f}",
+                "Schedule payments and manage vendor relationships."
+            ]
+            return {
+                "intent": "list_vendor_bills",
+                "answer": answer,
+                "insights": insights,
+                "data": data,
+                "next_questions": [
+                    "List suppliers",
+                    "Show purchase orders",
+                    "Delayed orders?"
+                ]
+            }
+
         return {
             "intent": "unknown",
             "answer": "I didn't understand that question.",
             "insights": [
                 "Try asking about suppliers, items, or purchase orders.",
-                "You can also ask for a specific purchase order by name.",
+                "You can also ask about customers, sales orders, or invoices.",
                 "Ask about total spend, pending orders, or monthly reports."
             ],
             "data": {},
             "next_questions": [
                 "List suppliers",
-                "Show items",
+                "Show customers",
                 "Show purchase orders",
-                "Generate monthly report"
+                "Show sales orders"
             ]
         }
 

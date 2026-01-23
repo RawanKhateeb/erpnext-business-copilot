@@ -12,7 +12,8 @@ def test_no_anomalies():
 def test_one_anomaly():
     pos = [
         {"item_code": "ITEM-001", "supplier": "SA", "rate": 100, "qty": 1},
-        {"item_code": "ITEM-001", "supplier": "SB", "rate": 150, "qty": 1},
+        {"item_code": "ITEM-001", "supplier": "SB", "rate": 100, "qty": 1},
+        {"item_code": "ITEM-001", "supplier": "SC", "rate": 150, "qty": 1},
     ]
     result = detect_price_anomalies(pos)
     assert result["summary"]["anomaly_count"] >= 1
@@ -26,7 +27,7 @@ def test_empty():
 def test_critical():
     pos = [
         {"item_code": "ITEM-001", "supplier": "SA", "rate": 100, "qty": 1},
-        {"item_code": "ITEM-001", "supplier": "SB", "rate": 200, "qty": 1},
+        {"item_code": "ITEM-001", "supplier": "SB", "rate": 300, "qty": 1},
     ]
     result = detect_price_anomalies(pos)
     assert len(result["anomalies"]) > 0
@@ -36,16 +37,19 @@ def test_critical():
 def test_formatting():
     pos = [
         {"item_code": "ITEM-001", "supplier": "SA", "rate": 1000.5, "qty": 1},
-        {"item_code": "ITEM-001", "supplier": "SB", "rate": 1500.75, "qty": 1},
+        {"item_code": "ITEM-001", "supplier": "SB", "rate": 1000.5, "qty": 1},
+        {"item_code": "ITEM-001", "supplier": "SC", "rate": 1500.75, "qty": 1},
     ]
     result = detect_price_anomalies(pos)
+    assert len(result["anomalies"]) > 0
     assert "$" in result["anomalies"][0]["price"]
     print("[OK] test_formatting")
 
 def test_calc():
     pos = [
         {"item_code": "ITEM-001", "supplier": "SA", "quantity": 10, "amount": 1000},
-        {"item_code": "ITEM-001", "supplier": "SB", "quantity": 10, "amount": 1500},
+        {"item_code": "ITEM-001", "supplier": "SB", "quantity": 10, "amount": 1000},
+        {"item_code": "ITEM-001", "supplier": "SC", "quantity": 10, "amount": 1500},
     ]
     result = detect_price_anomalies(pos)
     assert result["summary"]["anomaly_count"] >= 1

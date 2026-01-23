@@ -2,10 +2,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
+from fastapi.responses import StreamingResponse
 from app.erpnext_client import ERPNextClient
 from pydantic import BaseModel
 from app.copilot.service import handle_user_input
+from app.pdf_export import generate_pdf_report
 import os
+import json
 
 app = FastAPI()
 
@@ -84,3 +87,45 @@ def copilot_ask(req: CopilotRequest):
     }
     """
     return handle_user_input(req.query)
+
+
+class ExportRequest(BaseModel):
+    data: dict
+    intent: str = "report"
+    title: str = "ERPNext Copilot Report"
+
+
+@app.post("/export/pdf")
+def export_pdf(req: ExportRequest):
+    """
+    Export copilot response data as PDF.
+    
+    Request: POST /export/pdf
+    Body: {
+        "data": { ... copilot response data ... },
+        "intent": "detect_price_anomalies",
+        "title": "Price Anomaly Report"
+    }
+    
+    Returns: PDF file download
+    """
+    try:
+        # Extract the data to export
+        export_data = req.data.get('data') or req.data
+        
+        # Generate PDF
+        pdf_bytes = generate_pdf_report(
+            data=export_data,
+            intent=req.intent,
+            title=req.title
+        )
+        
+        # Return as downloadable file
+        filename = f"copilot_report_{req.intent}.pdf"
+        return StreamingResponse(
+            iter([pdf_bytes]),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
