@@ -810,6 +810,43 @@
             }
         }
 
+        function sendViaEmail(data, intent) {
+            const email = prompt('Enter recipient email address:', 'manager@company.com');
+            if (!email) return; // User cancelled
+            
+            // Show loading message
+            const originalButtonText = event.target.textContent;
+            event.target.textContent = '📧 Sending...';
+            event.target.disabled = true;
+            
+            fetch('/send/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    recipient_email: email,
+                    data: data,
+                    intent: intent
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('✓ Email sent successfully to ' + email);
+                } else {
+                    alert('✗ Error: ' + result.message);
+                }
+                event.target.textContent = originalButtonText;
+                event.target.disabled = false;
+            })
+            .catch(error => {
+                alert('✗ Failed to send email: ' + error.message);
+                event.target.textContent = originalButtonText;
+                event.target.disabled = false;
+            });
+        }
+
         function renderTable(data, intent) {
             // Determine which columns to show based on intent
             let columns = [];
@@ -1128,6 +1165,15 @@
                     pdfButton.type = 'button';
                     pdfButton.onclick = () => exportData(data, data.intent, 'pdf');
                     exportSection.appendChild(pdfButton);
+                    
+                    const emailButton = document.createElement('button');
+                    emailButton.className = 'export-button';
+                    emailButton.textContent = '📧 Send to Mail';
+                    emailButton.style.borderColor = '#3498db';
+                    emailButton.style.color = '#3498db';
+                    emailButton.type = 'button';
+                    emailButton.onclick = () => sendViaEmail(data, data.intent);
+                    exportSection.appendChild(emailButton);
                     
                     exportSection.classList.remove('hidden');
                 } else {
