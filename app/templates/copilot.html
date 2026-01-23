@@ -930,6 +930,10 @@
             const tableContainer = document.getElementById('tableContainer');
             const rawDataSection = document.getElementById('rawDataSection');
             const nextQuestionsContainer = document.getElementById('nextQuestionsContainer');
+            const approvalSection = document.getElementById('approvalSection');
+            const approvalDecision = document.getElementById('approvalDecision');
+            const approvalContent = document.getElementById('approvalContent');
+            const exportSection = document.getElementById('exportSection');
 
             // Set intent badge
             intentBadge.textContent = data.intent || 'Unknown';
@@ -956,10 +960,6 @@
             nextQuestionsContainer.innerHTML = '';
 
             // Handle approval-specific rendering
-            const approvalSection = document.getElementById('approvalSection');
-            const approvalDecision = document.getElementById('approvalDecision');
-            const approvalContent = document.getElementById('approvalContent');
-            
             if (data.intent === 'approve_po') {
                 // Render approval decision
                 approvalContent.innerHTML = '';
@@ -1105,7 +1105,6 @@
             }
 
             // Add export buttons if data is available
-            const exportSection = document.getElementById('exportSection');
             exportSection.innerHTML = '';
             
             if (data.data) {
