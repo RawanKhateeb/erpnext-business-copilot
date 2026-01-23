@@ -4,6 +4,7 @@ from app.copilot.intent import parse_intent
 from app.erpnext_client import ERPNextClient
 from app.insights import build_purchase_order_insights
 from app.price_anomaly_detector import detect_price_anomalies
+from app.delayed_orders_detector import detect_delayed_orders
 
 
 def generate_monthly_report(pos: List[Dict]) -> tuple[str, List[str]]:
@@ -352,6 +353,35 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 ],
                 "anomaly_summary": anomaly_results["summary"],
                 "recommendations": anomaly_results["recommendations"]
+            }
+
+        if intent == "detect_delayed_orders":
+            pos = client.list_purchase_orders(limit=500)
+            delay_results = detect_delayed_orders(pos)
+            
+            if not delay_results["delayed_orders"]:
+                answer = "No delayed orders detected. All orders are on schedule!"
+                insights = ["Great job maintaining supplier timelines."]
+                delay_data = []
+            else:
+                answer = f"Found {delay_results['summary']['delayed_count']} delayed orders out of {delay_results['summary']['total_orders']} total. On-time delivery: {delay_results['summary']['on_time_percentage']}%."
+                insights = delay_results["recommendations"]
+                delay_data = delay_results["delayed_orders"]
+            
+            return {
+                "intent": "detect_delayed_orders",
+                "answer": answer,
+                "insights": insights,
+                "data": delay_data,
+                "next_questions": [
+                    "Show purchase orders",
+                    "List suppliers",
+                    "What's our spending?",
+                    "Show price anomalies"
+                ],
+                "delay_summary": delay_results["summary"],
+                "supplier_performance": delay_results["supplier_performance"],
+                "recommendations": delay_results["recommendations"]
             }
 
         return {

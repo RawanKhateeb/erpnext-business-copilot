@@ -17,6 +17,12 @@ def parse_intent(text: str) -> Dict[str, Any]:
     if "price" in q and ("check" in q or "anomal" in q or "unusual" in q):
         return {"intent": "detect_price_anomalies"}
 
+    # Delayed orders - check before general purchase order
+    if "delay" in q or "late" in q or "overdue" in q or "past due" in q:
+        return {"intent": "detect_delayed_orders"}
+    if ("slow" in q or "behind" in q) and ("delivery" in q or "order" in q):
+        return {"intent": "detect_delayed_orders"}
+
     # Purchase Order details if a PO name is mentioned
     m = re.search(r"(pur-ord-\d{4}-\d{5})", q)
     if m:
