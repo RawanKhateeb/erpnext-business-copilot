@@ -168,6 +168,54 @@
             overflow-x: auto;
         }
 
+        /* ERPNext Link Styling */
+        .erp-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .erp-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .erp-link::after {
+            content: '↗';
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .erp-open-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .erp-open-btn:hover {
+            background: #764ba2;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .erp-open-btn::after {
+            content: '↗';
+            font-size: 11px;
+        }
+
         .collapsible-section {
             margin-top: 15px;
             border-top: 1px solid #e0e0e0;
@@ -907,6 +955,20 @@
     </div>
 
     <script>
+        // ERPNext Configuration
+        const ERP_BASE_URL = 'http://localhost:8080';
+
+        // Helper function to get ERPNext document URL
+        function getERPNextUrl(doctype, docname) {
+            return `${ERP_BASE_URL}/app/${doctype.toLowerCase().replace(/ /g, '-')}/${docname}`;
+        }
+
+        // Helper function to open in ERPNext
+        function openInERP(doctype, docname) {
+            const url = getERPNextUrl(doctype, docname);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -1110,21 +1172,34 @@
         function renderTable(data, intent) {
             // Determine which columns to show based on intent
             let columns = [];
+            let doctype = null;
+            let hasOpenButton = false;
             
             if (intent === 'list_suppliers' && Array.isArray(data)) {
                 columns = ['name'];
+                doctype = 'Supplier';
             } else if (intent === 'list_items' && Array.isArray(data)) {
                 columns = ['name', 'item_name'];
+                doctype = 'Item';
             } else if (intent === 'list_customers' && Array.isArray(data)) {
                 columns = ['name'];
+                doctype = 'Customer';
             } else if (intent === 'list_sales_orders' && Array.isArray(data)) {
                 columns = ['name', 'customer', 'transaction_date', 'status', 'grand_total'];
+                doctype = 'Sales Order';
+                hasOpenButton = true;
             } else if (intent === 'list_sales_invoices' && Array.isArray(data)) {
                 columns = ['name', 'customer', 'posting_date', 'status', 'grand_total'];
+                doctype = 'Sales Invoice';
+                hasOpenButton = true;
             } else if (intent === 'list_vendor_bills' && Array.isArray(data)) {
                 columns = ['name', 'supplier', 'posting_date', 'status', 'grand_total'];
+                doctype = 'Purchase Invoice';
+                hasOpenButton = true;
             } else if (intent === 'list_purchase_orders' && Array.isArray(data)) {
                 columns = ['name', 'supplier', 'transaction_date', 'status', 'grand_total'];
+                doctype = 'Purchase Order';
+                hasOpenButton = true;
             } else {
                 return null;
             }
@@ -1146,6 +1221,9 @@
                     .join(' ');
                 html += `<th>${displayName}</th>`;
             });
+            if (hasOpenButton) {
+                html += '<th>Action</th>';
+            }
             html += '</tr></thead>';
 
             // Data rows
@@ -1154,16 +1232,32 @@
                 html += '<tr>';
                 columns.forEach(col => {
                     let value = row[col] || '-';
+                    
+                    // Convert 'name' column to clickable ERPNext link
+                    if (col === 'name' && doctype && value !== '-') {
+                        const url = getERPNextUrl(doctype, value);
+                        value = `<a href="${url}" target="_blank" rel="noopener noreferrer" class="erp-link">${value}</a>`;
+                    }
+                    
                     // Format currency
                     if ((col === 'grand_total' || col === 'total') && typeof value === 'number') {
                         value = value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
                     }
+                    
                     // Format date
                     if ((col === 'transaction_date' || col === 'posting_date') && value !== '-') {
                         value = new Date(value).toLocaleDateString('en-US');
                     }
+                    
                     html += `<td>${value}</td>`;
                 });
+                
+                // Add "Open in ERPNext" button for document types
+                if (hasOpenButton && doctype && row.name) {
+                    const btnUrl = getERPNextUrl(doctype, row.name);
+                    html += `<td><button class="erp-open-btn" onclick="window.open('${btnUrl}', '_blank', 'noopener,noreferrer')">Open</button></td>`;
+                }
+                
                 html += '</tr>';
             });
             html += '</tbody></table></div>';
