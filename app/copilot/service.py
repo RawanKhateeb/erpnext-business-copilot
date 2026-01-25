@@ -6,6 +6,7 @@ from app.insights import build_purchase_order_insights
 from app.price_anomaly_detector import detect_price_anomalies
 from app.delayed_orders_detector import detect_delayed_orders
 from app.po_approval_analyzer import analyze_po_approval
+from app.po_risk_analyzer import analyze_po_risks
 from app.recommendation_explainer import explain_recommendations
 
 
@@ -438,6 +439,38 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 "supplier_performance": delay_results["supplier_performance"],
                 "recommendations": delay_results["recommendations"],
                 "explanation": explanation
+            }
+
+        if intent == "analyze_po_risks":
+            pos = client.list_purchase_orders(limit=500)
+            risk_results = analyze_po_risks(pos, client)
+            
+            high_count = risk_results["high_risk_count"]
+            medium_count = risk_results["medium_risk_count"]
+            low_count = risk_results["low_risk_count"]
+            
+            answer = f"Purchase Order Risk Analysis: {high_count} High Risk | {medium_count} Medium Risk | {low_count} Low Risk"
+            
+            insights = risk_results["recommendations"]
+            
+            return {
+                "intent": "analyze_po_risks",
+                "answer": answer,
+                "insights": insights,
+                "data": risk_results["orders"],
+                "next_questions": [
+                    "Show purchase orders",
+                    "Show price anomalies",
+                    "List suppliers",
+                    "What's delayed?"
+                ],
+                "summary": {
+                    "high_risk": high_count,
+                    "medium_risk": medium_count,
+                    "low_risk": low_count,
+                    "total": len(pos)
+                },
+                "recommendations": risk_results["recommendations"]
             }
 
         if intent == "list_customers":

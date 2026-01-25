@@ -12,6 +12,12 @@ def parse_intent(text: str) -> Dict[str, Any]:
     """
     q = (text or "").strip().lower()
 
+    # PO Risk Analysis - check early
+    if "risk" in q or "risky" in q:
+        return {"intent": "analyze_po_risks"}
+    if "analyze" in q and ("order" in q or "po" in q):
+        return {"intent": "analyze_po_risks"}
+
     # PO Approval - check FIRST (most specific)
     if "approve" in q or "should i approve" in q or "can i approve" in q:
         # Extract PO name if present (e.g., "Should I approve PUR-ORD-2026-00001?")

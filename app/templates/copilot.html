@@ -662,6 +662,147 @@
             margin-right: 8px;
         }
 
+        /* Risk Analysis Section */
+        .risk-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .risk-card {
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .risk-card.high {
+            background: #FEE2E2;
+            border-color: #DC2626;
+        }
+
+        .risk-card.medium {
+            background: #FEF3C7;
+            border-color: #F59E0B;
+        }
+
+        .risk-card.low {
+            background: #D1FAE5;
+            border-color: #10B981;
+        }
+
+        .risk-card .count {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1F2937;
+        }
+
+        .risk-card .label {
+            font-size: 12px;
+            color: #4B5563;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .risk-item {
+            background: white;
+            border: 1px solid #E5E7EB;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .risk-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .risk-order-id {
+            font-weight: 600;
+            color: #1F2937;
+            font-size: 14px;
+        }
+
+        .risk-level-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .risk-level-badge.high {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .risk-level-badge.medium {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .risk-level-badge.low {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .risk-supplier {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 6px;
+        }
+
+        .risk-reason-list {
+            list-style: none;
+            margin: 8px 0 0 0;
+            padding: 0;
+        }
+
+        .risk-reason-list li {
+            font-size: 12px;
+            color: #555;
+            padding: 4px 0;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .risk-reason-list li:last-child {
+            border-bottom: none;
+        }
+
+        .risk-reason-list li::before {
+            content: '• ';
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 4px;
+        }
+
+        .risk-recommendation {
+            background: #F0F7FF;
+            border-left: 3px solid #3B82F6;
+            padding: 10px;
+            font-size: 12px;
+            color: #1F2937;
+            margin-top: 8px;
+            border-radius: 3px;
+        }
+
+        .risk-recommendation::before {
+            content: '→ ';
+            color: #667eea;
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
         .error .intent-badge {
             background: #f44;
         }
@@ -731,6 +872,10 @@
         <div id="responseArea" class="response-area">
             <span id="intentBadge" class="intent-badge"></span>
             <p id="answer" class="message"></p>
+            <div id="riskSection" class="hidden">
+                <div id="riskSummary" class="risk-summary"></div>
+                <div id="riskList"></div>
+            </div>
             <div id="explanationSection" class="explanation-section hidden">
                 <h3>📋 Why These Recommendations?</h3>
                 <div id="explanationContent"></div>
@@ -1088,6 +1233,9 @@
             const exportSection = document.getElementById('exportSection');
             const explanationSection = document.getElementById('explanationSection');
             const explanationContent = document.getElementById('explanationContent');
+            const riskSection = document.getElementById('riskSection');
+            const riskSummary = document.getElementById('riskSummary');
+            const riskList = document.getElementById('riskList');
 
             // Set intent badge
             intentBadge.textContent = data.intent || 'Unknown';
@@ -1152,6 +1300,64 @@
             tableContainer.innerHTML = '';
             rawDataSection.innerHTML = '';
             nextQuestionsContainer.innerHTML = '';
+
+            // Handle risk analysis rendering
+            if (data.intent === 'analyze_po_risks') {
+                riskSummary.innerHTML = '';
+                riskList.innerHTML = '';
+                
+                // Render summary cards
+                if (data.summary) {
+                    riskSummary.innerHTML = `
+                        <div class="risk-card high">
+                            <div class="count">${data.summary.high_risk}</div>
+                            <div class="label">High Risk</div>
+                        </div>
+                        <div class="risk-card medium">
+                            <div class="count">${data.summary.medium_risk}</div>
+                            <div class="label">Medium Risk</div>
+                        </div>
+                        <div class="risk-card low">
+                            <div class="count">${data.summary.low_risk}</div>
+                            <div class="label">Low Risk</div>
+                        </div>
+                    `;
+                }
+                
+                // Render risk items
+                if (data.data && Array.isArray(data.data)) {
+                    let riskHtml = '<div class="risk-table">';
+                    
+                    data.data.forEach(order => {
+                        const riskClass = order.risk_level.includes('🔴') ? 'high' : 
+                                        order.risk_level.includes('🟡') ? 'medium' : 'low';
+                        
+                        riskHtml += `
+                            <div class="risk-item">
+                                <div class="risk-item-header">
+                                    <span class="risk-order-id">${order.order_id}</span>
+                                    <span class="risk-level-badge ${riskClass}">${order.risk_level}</span>
+                                </div>
+                                <div class="risk-supplier">Supplier: ${order.supplier} | Amount: $${order.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                <ul class="risk-reason-list">
+                                    ${order.reasons.map(r => `<li>${r}</li>`).join('')}
+                                </ul>
+                                <div class="risk-recommendation">${order.recommendation}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    riskHtml += '</div>';
+                    riskList.innerHTML = riskHtml;
+                }
+                
+                riskSection.classList.remove('hidden');
+                insightsSection.classList.add('hidden');
+                dataSection.classList.add('hidden');
+                exportSection.classList.add('hidden');
+            } else {
+                riskSection.classList.add('hidden');
+            }
 
             // Handle approval-specific rendering
             if (data.intent === 'approve_po') {
