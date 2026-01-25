@@ -1426,10 +1426,13 @@
                         const riskClass = order.risk_level.includes('🔴') ? 'high' : 
                                         order.risk_level.includes('🟡') ? 'medium' : 'low';
                         
+                        const erpUrl = getERPNextUrl('Purchase Order', order.order_id);
+                        const orderLink = `<a href="${erpUrl}" target="_blank" rel="noopener noreferrer" class="erp-link">${order.order_id}</a>`;
+                        
                         riskHtml += `
                             <div class="risk-item">
                                 <div class="risk-item-header">
-                                    <span class="risk-order-id">${order.order_id}</span>
+                                    <span class="risk-order-id">${orderLink}</span>
                                     <span class="risk-level-badge ${riskClass}">${order.risk_level}</span>
                                 </div>
                                 <div class="risk-supplier">Supplier: ${order.supplier} | Amount: $${order.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
