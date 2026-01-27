@@ -1082,7 +1082,7 @@
                 <button type="button" class="mode-btn" data-mode="ai">🤖 AI Reports</button>
             </div>
         </div>
-        <div class="mode-helper">Query live ERP data</div>
+        <div class="mode-helper">live ERP data</div>
 
         <form id="copilotForm" onsubmit="handleSubmit(event)">
             <div class="input-group">
@@ -1159,7 +1159,7 @@
 
                 // Update helper text
                 const helper = document.querySelector('.mode-helper');
-                helper.textContent = currentMode === 'data' ? 'Query live ERP data' : 'Generate insights using AI';
+                helper.textContent = currentMode === 'data' ? 'live ERP data' : 'Generate insights using AI';
 
                 // Update input placeholder
                 const query = document.getElementById('query');
