@@ -38,8 +38,51 @@
 
         .subtitle {
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 14px;
+        }
+
+        /* Mode Selector Toggle */
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .mode-toggle {
+            display: inline-flex;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 24px;
+            padding: 4px;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .mode-btn {
+            padding: 8px 24px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .mode-helper {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 18px;
+            transition: color 0.3s;
         }
 
         .input-group {
@@ -901,6 +944,15 @@
         <h1>🤖 ERPNext Copilot</h1>
         <p class="subtitle">AI-powered insights for procurement, spending, and supplier management</p>
 
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <div class="mode-toggle">
+                <button type="button" class="mode-btn active" data-mode="data">📊 Data</button>
+                <button type="button" class="mode-btn" data-mode="ai">🤖 AI Reports</button>
+            </div>
+        </div>
+        <div class="mode-helper">Query live ERP data</div>
+
         <form id="copilotForm" onsubmit="handleSubmit(event)">
             <div class="input-group">
                 <input 
@@ -955,7 +1007,41 @@
     </div>
 
     <script>
+        // ============================================================================
+        // Mode State Management
+        // ============================================================================
+        let currentMode = 'data'; // 'data' or 'ai'
+
+        // Mode selector toggle handler
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const newMode = btn.getAttribute('data-mode');
+                if (newMode === currentMode) return;
+
+                currentMode = newMode;
+
+                // Update button states
+                document.querySelectorAll('.mode-btn').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-mode') === currentMode);
+                });
+
+                // Update helper text
+                const helper = document.querySelector('.mode-helper');
+                helper.textContent = currentMode === 'data' ? 'Query live ERP data' : 'Generate insights using AI';
+
+                // Update input placeholder
+                const query = document.getElementById('query');
+                query.placeholder = currentMode === 'data' 
+                    ? "e.g., 'List suppliers' or 'PUR-ORD-2026-00001'" 
+                    : 'Generate monthly procurement report';
+                query.focus();
+            });
+        });
+
+        // ============================================================================
         // ERPNext Configuration
+        // ============================================================================
         const ERP_BASE_URL = 'http://localhost:8080';
 
         // Helper function to get ERPNext document URL
@@ -985,7 +1071,13 @@
             spinner.classList.remove('hidden');
 
             try {
-                const response = await fetch('/copilot', {
+                // Route based on mode
+                let endpoint = '/copilot';
+                if (currentMode === 'ai') {
+                    endpoint = '/ai/report';
+                }
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -996,6 +1088,10 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Mark AI-generated responses
+                    if (currentMode === 'ai') {
+                        data.ai_generated = true;
+                    }
                     displayResponse(data, false);
                 } else {
                     displayResponse(data, true);
@@ -1332,7 +1428,13 @@
             const riskList = document.getElementById('riskList');
 
             // Set intent badge
-            intentBadge.textContent = data.intent || 'Unknown';
+            if (data.ai_generated) {
+                intentBadge.textContent = '🤖 AI Generated';
+                intentBadge.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            } else {
+                intentBadge.textContent = data.intent || 'Unknown';
+                intentBadge.style.background = '#667eea';
+            }
 
             // Set answer (main message)
             answer.textContent = data.answer || data.message || data.summary || 'No response';

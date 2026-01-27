@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.copilot.service import handle_user_input
 from app.pdf_export import generate_pdf_report
 from app.email_service import send_approval_email, send_report_email
+from app.ai_report_generator import AIReportGenerator
 import os
 import json
 
@@ -130,6 +131,138 @@ def export_pdf(req: ExportRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+class AIReportRequest(BaseModel):
+    query: str
+
+
+@app.post("/ai/report")
+def ai_report(req: AIReportRequest):
+    """
+    Generate AI-powered procurement report using OpenAI.
+    
+    Request: POST /ai/report
+    Body: {"query": "Generate monthly procurement report"}
+    
+    Returns: {
+        "success": true,
+        "intent": "ai_report",
+        "answer": "Narrative report text",
+        "ai_generated": true,
+        "summary": {
+            "total_spend": 45000.00,
+            "po_count": 25,
+            "pending_count": 5,
+            ...
+        }
+    }
+    """
+    try:
+        # Fetch purchase orders from ERPNext
+        client = get_client()
+        pos = client.list_purchase_orders()
+        
+        if not pos:
+            return {
+                "success": False,
+                "message": "No purchase order data available",
+                "intent": "ai_report",
+                "ai_generated": True
+            }
+        
+        # Compute summary statistics
+        summary = _compute_po_summary(pos)
+        summary['date_range'] = 'This Period'
+        
+        # Generate AI report
+        try:
+            ai_gen = AIReportGenerator()
+            result = ai_gen.generate_procurement_report(summary, req.query)
+            
+            if result.get('success'):
+                return {
+                    "success": True,
+                    "intent": "ai_report",
+                    "answer": result['report'],
+                    "ai_generated": True,
+                    "summary": result['summary'],
+                    "generated_at": result['generated_at']
+                }
+            else:
+                # OpenAI error
+                return {
+                    "success": False,
+                    "message": result.get('message', 'AI service unavailable'),
+                    "intent": "ai_report",
+                    "ai_generated": True
+                }
+        
+        except ImportError:
+            return {
+                "success": False,
+                "message": "OpenAI library not installed. Please run: pip install openai",
+                "intent": "ai_report",
+                "ai_generated": True
+            }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error generating report: {str(e)}",
+            "intent": "ai_report",
+            "ai_generated": True,
+            "error": str(e)
+        }
+
+
+def _compute_po_summary(pos: list) -> dict:
+    """
+    Compute summary statistics from purchase orders.
+    
+    Args:
+        pos: List of purchase order dictionaries
+    
+    Returns:
+        Dictionary with summary statistics
+    """
+    total_spend = 0
+    pending_count = 0
+    status_breakdown = {}
+    suppliers = {}
+    
+    for po in pos:
+        # Sum spending
+        amount = po.get('grand_total', 0)
+        if isinstance(amount, (int, float)):
+            total_spend += amount
+        
+        # Count pending
+        status = po.get('status', 'Unknown')
+        if status.lower() in ['pending', 'draft']:
+            pending_count += 1
+        
+        # Status breakdown
+        status_breakdown[status] = status_breakdown.get(status, 0) + 1
+        
+        # Supplier spending
+        supplier = po.get('supplier', 'Unknown')
+        suppliers[supplier] = suppliers.get(supplier, 0) + amount
+    
+    # Get top 5 suppliers
+    top_suppliers = sorted(
+        suppliers.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:5]
+    
+    return {
+        'total_spend': total_spend,
+        'po_count': len(pos),
+        'pending_count': pending_count,
+        'status_breakdown': status_breakdown,
+        'top_suppliers': top_suppliers
+    }
 
 
 class EmailRequest(BaseModel):
