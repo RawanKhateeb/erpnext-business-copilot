@@ -7,7 +7,6 @@ from app.erpnext_client import ERPNextClient
 from pydantic import BaseModel
 from app.copilot.service import handle_user_input
 from app.pdf_export import generate_pdf_report
-from app.email_service import send_approval_email, send_report_email
 from app.ai_report_generator import AIReportGenerator
 import os
 import json
@@ -295,39 +294,3 @@ def _compute_po_summary(pos: list) -> dict:
         'status_breakdown': status_breakdown,
         'top_suppliers': top_suppliers
     }
-
-
-class EmailRequest(BaseModel):
-    recipient_email: str
-    data: dict
-    intent: str = "report"
-
-
-@app.post("/send/email")
-def send_email(req: EmailRequest):
-    """
-    Send approval analysis or report via email.
-    
-    Request: POST /send/email
-    Body: {
-        "recipient_email": "manager@company.com",
-        "data": { ... approval/report data ... },
-        "intent": "approve_po"
-    }
-    
-    Returns: {success: bool, message: str}
-    """
-    try:
-        if req.intent == "approve_po":
-            # Send approval analysis
-            result = send_approval_email(req.recipient_email, req.data)
-        else:
-            # Send generic report
-            result = send_report_email(req.recipient_email, req.data, req.intent)
-        
-        return result
-    except Exception as e:
-        return {
-            "success": False,
-            "message": f"Failed to send email: {str(e)}"
-        }
