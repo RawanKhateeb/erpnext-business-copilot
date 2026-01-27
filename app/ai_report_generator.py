@@ -44,7 +44,7 @@ class AIReportGenerator:
     
     def generate_procurement_report(self, summary: Dict[str, Any], query: str = None) -> Dict[str, Any]:
         """
-        Generate a narrative procurement report from summary data.
+        Generate a structured procurement report from summary data.
         
         Args:
             summary: Dictionary containing:
@@ -61,6 +61,8 @@ class AIReportGenerator:
             {
                 'success': bool,
                 'report': str (narrative report),
+                'sections': dict with structured report sections,
+                'metrics': dict with key metrics,
                 'summary': dict,
                 'generated_at': str (ISO timestamp)
             }
@@ -108,9 +110,17 @@ class AIReportGenerator:
                 )
                 report_text = response.choices[0].message['content']
             
+            # Extract structured sections from the report
+            sections = self._parse_report_sections(report_text)
+            
+            # Prepare metrics for display
+            metrics = self._prepare_metrics(summary)
+            
             return {
                 'success': True,
                 'report': report_text,
+                'sections': sections,
+                'metrics': metrics,
                 'summary': summary,
                 'generated_at': datetime.utcnow().isoformat()
             }
@@ -194,3 +204,74 @@ Keep the report to 3-4 paragraphs. Use professional business language."""
             prompt += f"\n\nUser context: {query}"
         
         return prompt
+
+    @staticmethod
+    def _parse_report_sections(report_text: str) -> Dict[str, str]:
+        """
+        Parse the report into logical sections.
+        
+        Args:
+            report_text: Full report narrative
+        
+        Returns:
+            Dictionary with parsed sections
+        """
+        sections = {
+            'overview': '',
+            'analysis': '',
+            'trends': '',
+            'recommendation': ''
+        }
+        
+        paragraphs = report_text.split('\n\n')
+        
+        if len(paragraphs) >= 1:
+            sections['overview'] = paragraphs[0]
+        if len(paragraphs) >= 2:
+            sections['analysis'] = paragraphs[1]
+        if len(paragraphs) >= 3:
+            sections['trends'] = paragraphs[2]
+        if len(paragraphs) >= 4:
+            sections['recommendation'] = paragraphs[3]
+        
+        return sections
+
+    @staticmethod
+    def _prepare_metrics(summary: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Prepare key metrics for display.
+        
+        Args:
+            summary: Procurement data summary
+        
+        Returns:
+            Dictionary with formatted metrics
+        """
+        total_spend = summary.get('total_spend', 0)
+        po_count = summary.get('po_count', 0)
+        pending_count = summary.get('pending_count', 0)
+        status_breakdown = summary.get('status_breakdown', {})
+        top_suppliers = summary.get('top_suppliers', [])
+        
+        # Calculate average spend per PO
+        avg_spend_per_po = total_spend / po_count if po_count > 0 else 0
+        
+        # Calculate pending percentage
+        pending_percentage = (pending_count / po_count * 100) if po_count > 0 else 0
+        
+        # Get top supplier
+        top_supplier_name = top_suppliers[0][0] if top_suppliers else 'N/A'
+        top_supplier_spend = top_suppliers[0][1] if top_suppliers else 0
+        
+        return {
+            'total_spend': total_spend,
+            'po_count': po_count,
+            'pending_count': pending_count,
+            'pending_percentage': round(pending_percentage, 1),
+            'avg_spend_per_po': avg_spend_per_po,
+            'top_supplier': top_supplier_name,
+            'top_supplier_spend': top_supplier_spend,
+            'supplier_count': len(top_suppliers),
+            'status_breakdown': status_breakdown,
+            'top_suppliers': top_suppliers
+        }

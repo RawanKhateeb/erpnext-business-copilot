@@ -11,6 +11,9 @@ from app.email_service import send_approval_email, send_report_email
 from app.ai_report_generator import AIReportGenerator
 import os
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -150,20 +153,23 @@ def ai_report(req: AIReportRequest):
         "intent": "ai_report",
         "answer": "Narrative report text",
         "ai_generated": true,
-        "summary": {
-            "total_spend": 45000.00,
-            "po_count": 25,
-            "pending_count": 5,
-            ...
-        }
+        "summary": {...}
     }
     """
     try:
-        # Fetch purchase orders from ERPNext
-        client = get_client()
-        pos = client.list_purchase_orders()
+        logger.info(f"AI Report request: {req.query}")
+        
+        # Step 1: Fetch purchase orders from ERPNext
+        try:
+            client = get_client()
+            pos = client.list_purchase_orders()
+            logger.info(f"Fetched {len(pos) if pos else 0} purchase orders")
+        except Exception as e:
+            logger.error(f"ERPNext fetch error: {str(e)}")
+            pos = []
         
         if not pos:
+            logger.warning("No purchase orders found")
             return {
                 "success": False,
                 "message": "No purchase order data available",
@@ -171,16 +177,31 @@ def ai_report(req: AIReportRequest):
                 "ai_generated": True
             }
         
-        # Compute summary statistics
-        summary = _compute_po_summary(pos)
-        summary['date_range'] = 'This Period'
-        
-        # Generate AI report
+        # Step 2: Compute summary statistics
         try:
+            summary = _compute_po_summary(pos)
+            summary['date_range'] = 'This Period'
+            logger.info(f"Summary computed: {summary['po_count']} orders, ${summary['total_spend']} total spend")
+        except Exception as e:
+            logger.error(f"Summary computation error: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Error computing summary: {str(e)}",
+                "intent": "ai_report",
+                "ai_generated": True
+            }
+        
+        # Step 3: Generate AI report
+        try:
+            logger.info("Creating AIReportGenerator...")
             ai_gen = AIReportGenerator()
+            logger.info("AIReportGenerator created, calling generate_procurement_report...")
+            
             result = ai_gen.generate_procurement_report(summary, req.query)
+            logger.info(f"AI generation result: success={result.get('success')}")
             
             if result.get('success'):
+                logger.info("Report generated successfully")
                 return {
                     "success": True,
                     "intent": "ai_report",
@@ -190,29 +211,40 @@ def ai_report(req: AIReportRequest):
                     "generated_at": result['generated_at']
                 }
             else:
-                # OpenAI error
+                error_msg = result.get('message', 'AI service unavailable')
+                logger.error(f"AI Report generation failed: {error_msg}")
                 return {
                     "success": False,
-                    "message": result.get('message', 'AI service unavailable'),
+                    "message": error_msg,
                     "intent": "ai_report",
-                    "ai_generated": True
+                    "ai_generated": True,
+                    "error": result.get('error')
                 }
         
-        except ImportError:
+        except ImportError as e:
+            logger.error(f"OpenAI import error: {str(e)}")
             return {
                 "success": False,
-                "message": "OpenAI library not installed. Please run: pip install openai",
+                "message": "OpenAI library not installed",
+                "intent": "ai_report",
+                "ai_generated": True
+            }
+        except Exception as e:
+            logger.error(f"AI generation exception: {type(e).__name__}: {str(e)}", exc_info=True)
+            return {
+                "success": False,
+                "message": f"AI generation failed: {str(e)}",
                 "intent": "ai_report",
                 "ai_generated": True
             }
     
     except Exception as e:
+        logger.error(f"AI Report endpoint critical error: {type(e).__name__}: {str(e)}", exc_info=True)
         return {
             "success": False,
-            "message": f"Error generating report: {str(e)}",
+            "message": f"Critical error: {str(e)}",
             "intent": "ai_report",
-            "ai_generated": True,
-            "error": str(e)
+            "ai_generated": True
         }
 
 

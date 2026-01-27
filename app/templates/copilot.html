@@ -937,6 +937,137 @@
         .hidden {
             display: none;
         }
+
+        /* AI Report Styling */
+        .ai-report-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ai-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #f9fafb 100%);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .ai-metric-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .ai-metric-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .ai-metric-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .ai-metric-label {
+            font-size: 11px;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .ai-metric-sub {
+            font-size: 10px;
+            color: #9CA3AF;
+            margin-top: 2px;
+        }
+
+        .ai-report-sections {
+            padding: 20px;
+        }
+
+        .ai-section {
+            margin-bottom: 20px;
+        }
+
+        .ai-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .ai-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ai-section-icon {
+            font-size: 16px;
+        }
+
+        .ai-section-content {
+            background: #f9fafb;
+            border-left: 3px solid #667eea;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        .ai-suppliers-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ai-supplier-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .ai-supplier-name {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+
+        .ai-supplier-spend {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .ai-report-footer {
+            padding: 12px 20px;
+            background: #f0f4ff;
+            border-top: 1px solid #e5e7eb;
+            font-size: 11px;
+            color: #6B7280;
+            text-align: right;
+        }
+
+        .ai-report-footer .timestamp {
+            font-weight: 500;
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -1497,8 +1628,105 @@
             rawDataSection.innerHTML = '';
             nextQuestionsContainer.innerHTML = '';
 
+            // Handle AI Report rendering
+            if (data.ai_generated && data.metrics) {
+                dataSection.innerHTML = '';
+                
+                // Build metrics grid
+                let metricsHtml = '<div class="ai-metrics-grid">';
+                
+                const metrics = data.metrics;
+                const metricItems = [
+                    { label: 'Total Spend', value: `$${metrics.total_spend.toLocaleString('en-US', {minimumFractionDigits: 2})}` },
+                    { label: 'Purchase Orders', value: metrics.po_count, sub: 'Total' },
+                    { label: 'Pending', value: metrics.pending_count, sub: `${metrics.pending_percentage}% of total` },
+                    { label: 'Avg per PO', value: `$${metrics.avg_spend_per_po.toLocaleString('en-US', {minimumFractionDigits: 0})}` }
+                ];
+                
+                metricItems.forEach(item => {
+                    metricsHtml += `
+                        <div class="ai-metric-card">
+                            <div class="ai-metric-value">${item.value}</div>
+                            <div class="ai-metric-label">${item.label}</div>
+                            ${item.sub ? `<div class="ai-metric-sub">${item.sub}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                metricsHtml += '</div>';
+                
+                // Build report sections
+                let sectionsHtml = '<div class="ai-report-sections">';
+                
+                const sections = data.sections || {};
+                const sectionConfig = [
+                    { key: 'overview', icon: '📊', title: 'Overview' },
+                    { key: 'analysis', icon: '📈', title: 'Analysis' },
+                    { key: 'trends', icon: '🎯', title: 'Key Trends' },
+                    { key: 'recommendation', icon: '💡', title: 'Recommendation' }
+                ];
+                
+                sectionConfig.forEach(config => {
+                    if (sections[config.key]) {
+                        sectionsHtml += `
+                            <div class="ai-section">
+                                <div class="ai-section-title">
+                                    <span class="ai-section-icon">${config.icon}</span>
+                                    ${config.title}
+                                </div>
+                                <div class="ai-section-content">${sections[config.key]}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                // Add top suppliers
+                if (metrics.top_suppliers && metrics.top_suppliers.length > 0) {
+                    sectionsHtml += `
+                        <div class="ai-section">
+                            <div class="ai-section-title">
+                                <span class="ai-section-icon">🏢</span>
+                                Top Suppliers
+                            </div>
+                            <div class="ai-suppliers-list">
+                    `;
+                    
+                    metrics.top_suppliers.forEach(([name, spend]) => {
+                        const percentage = (spend / metrics.total_spend * 100).toFixed(1);
+                        sectionsHtml += `
+                            <div class="ai-supplier-item">
+                                <div class="ai-supplier-name">${name}</div>
+                                <div class="ai-supplier-spend">$${spend.toLocaleString('en-US', {minimumFractionDigits: 0})}</div>
+                                <div class="ai-metric-sub">${percentage}% of total</div>
+                            </div>
+                        `;
+                    });
+                    
+                    sectionsHtml += '</div></div>';
+                }
+                
+                sectionsHtml += '</div>';
+                
+                // Add footer
+                const timestamp = new Date(data.generated_at).toLocaleString();
+                const footerHtml = `
+                    <div class="ai-report-footer">
+                        Generated: <span class="timestamp">${timestamp}</span>
+                    </div>
+                `;
+                
+                // Combine all parts
+                tableContainer.innerHTML = `<div class="ai-report-container">${metricsHtml}${sectionsHtml}${footerHtml}</div>`;
+                dataSection.classList.remove('hidden');
+                exportSection.classList.add('hidden');
+                insightsSection.classList.add('hidden');
+                riskSection.classList.add('hidden');
+                approvalSection.classList.add('hidden');
+            }
+            
             // Handle risk analysis rendering
-            if (data.intent === 'analyze_po_risks') {
+            else if (data.intent === 'analyze_po_risks') {
+
                 riskSummary.innerHTML = '';
                 riskList.innerHTML = '';
                 
