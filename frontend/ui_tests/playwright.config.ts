@@ -4,7 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Playwright configuration for Copilot UI tests.
  * Uses POM (Page Object Model) pattern.
  */
-export default defineConfig({
+
+const config = {
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -31,13 +32,16 @@ export default defineConfig({
       use: { ...devices["Desktop Safari"] },
     },
   ],
+};
 
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "cd ../.. && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
-        url: "http://localhost:8000",
-        reuseExistingServer: true,
-        timeout: 120000,
-      },
-});
+// Only add webServer for local development, not in CI
+if (!process.env.CI) {
+  config.webServer = {
+    command: "cd ../.. && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    url: "http://localhost:8000",
+    reuseExistingServer: true,
+    timeout: 120000,
+  };
+}
+
+export default defineConfig(config);
