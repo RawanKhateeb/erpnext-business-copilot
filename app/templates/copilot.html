@@ -1186,6 +1186,65 @@
             window.open(url, '_blank', 'noopener,noreferrer');
         }
 
+        // Convert markdown-like formatting to HTML
+        function markdownToHtml(text) {
+            if (!text) return text;
+            
+            // Escape HTML special characters first
+            text = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Handle pipe-separated bullets
+            if (text.includes(' | ')) {
+                const bullets = text.split(' | ').map(bullet => bullet.trim());
+                let html = '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0;">';
+                bullets.forEach(bullet => {
+                    html += `<span style="background: #f0f0f0; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block;">• ${bullet}</span>`;
+                });
+                html += '</div>';
+                return html;
+            }
+            
+            // Convert headers (keep existing format)
+            text = text.replace(/^### (.*?)$/gm, '<h4>$1</h4>');
+            text = text.replace(/^## (.*?)$/gm, '<h3>$1</h3>');
+            text = text.replace(/^# (.*?)$/gm, '<h2>$1</h2>');
+            
+            // Convert horizontal rules
+            text = text.replace(/^---$/gm, '<hr style="margin: 16px 0; border: none; border-top: 1px solid #ddd;">');
+            
+            // Convert bold **text**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert italic *text*
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Convert bullet points (• or -)
+            text = text.replace(/^[•\-] (.*?)$/gm, '<li style="margin-left: 20px; margin-bottom: 4px;">$1</li>');
+            
+            // Convert numbered lists
+            text = text.replace(/^\d+\. (.*?)$/gm, '<li style="margin-left: 20px; margin-bottom: 4px;">$1</li>');
+            
+            // Convert line breaks to paragraphs (groups of text separated by blank lines)
+            text = text.split('\n\n').map(para => {
+                if (para.includes('<h') || para.includes('<hr') || para.includes('<li')) {
+                    return para;
+                }
+                return para.split('\n').join('<br>');
+            }).join('</p><p style="margin-bottom: 12px;">');
+            
+            text = '<p style="line-height: 1.6; margin-bottom: 12px;">' + text + '</p>';
+            
+            // Add styling for headers
+            text = text.replace(/<h2>/g, '<h2 style="margin-top: 16px; margin-bottom: 8px; color: #333; font-size: 20px;">');
+            text = text.replace(/<h3>/g, '<h3 style="margin-top: 12px; margin-bottom: 6px; color: #444; font-size: 16px;">');
+            text = text.replace(/<h4>/g, '<h4 style="margin-top: 10px; margin-bottom: 6px; color: #555; font-size: 14px;">');
+            
+            return text;
+        }
+
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -1531,7 +1590,7 @@
             }
 
             // Set answer (main message)
-            answer.textContent = data.answer || data.message || data.summary || 'No response';
+            answer.innerHTML = markdownToHtml(data.answer || data.message || data.summary || 'No response');
 
             // Render insights
             insightsList.innerHTML = '';

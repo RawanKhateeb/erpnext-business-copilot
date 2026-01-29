@@ -26,7 +26,7 @@ from mcp.types import Tool, TextContent
 
 # Import existing service layer
 from app.copilot.service import handle_user_input
-from app.erpnext_client import ERPNextClient
+from app.models.erp_client import ERPNextClient
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

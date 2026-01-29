@@ -8,7 +8,7 @@ Analyzes POs to recommend APPROVE/REVIEW/DO NOT APPROVE decisions based on:
 """
 
 from typing import Dict, List, Any, Tuple
-from app.erpnext_client import ERPNextClient
+from app.models.erp_client import ERPNextClient
 
 
 def get_supplier_open_orders(client: ERPNextClient, supplier: str) -> int:

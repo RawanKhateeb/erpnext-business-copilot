@@ -5,8 +5,8 @@ Tests: intent parsing, data fetching, error handling.
 
 import unittest
 from unittest.mock import MagicMock, patch
-from base_test import APITestBase
-from mock_data import MOCK_SUPPLIERS, MOCK_PURCHASE_ORDERS
+from backend.tests.api_mock.base_test import APITestBase
+from backend.tests.api_mock.mock_data import MOCK_SUPPLIERS, MOCK_PURCHASE_ORDERS
 
 
 class TestCopilotAskEndpoint(APITestBase):

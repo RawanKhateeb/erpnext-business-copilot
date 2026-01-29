@@ -5,8 +5,8 @@ Tests: list POs, response structure, limit parameter, error handling.
 
 import unittest
 from unittest.mock import MagicMock, patch
-from base_test import APITestBase
-from mock_data import MOCK_PURCHASE_ORDERS, MOCK_PURCHASE_ORDER_DETAIL
+from backend.tests.api_mock.base_test import APITestBase
+from backend.tests.api_mock.mock_data import MOCK_PURCHASE_ORDERS, MOCK_PURCHASE_ORDER_DETAIL
 
 
 class TestPurchaseOrdersEndpoint(APITestBase):
@@ -17,7 +17,7 @@ class TestPurchaseOrdersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_purchase_orders.return_value = MOCK_PURCHASE_ORDERS
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders")
 
         self.assert_response_ok(response)
@@ -30,7 +30,7 @@ class TestPurchaseOrdersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_purchase_orders.return_value = MOCK_PURCHASE_ORDERS
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders")
 
         data = response.json()
@@ -45,10 +45,10 @@ class TestPurchaseOrdersEndpoint(APITestBase):
         limited_pos = MOCK_PURCHASE_ORDERS[:2]
         mock_client.list_purchase_orders.return_value = limited_pos
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders?limit=2")
 
-        mock_client.list_purchase_orders.assert_called_with(limit=2)
+        mock_client.list_purchase_orders.assert_called_with(2)
         data = response.json()
         self.assertEqual(len(data["data"]), 2)
 
@@ -57,17 +57,17 @@ class TestPurchaseOrdersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_purchase_orders.return_value = MOCK_PURCHASE_ORDERS
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders")
 
-        mock_client.list_purchase_orders.assert_called_with(limit=20)
+        mock_client.list_purchase_orders.assert_called_with(20)
 
     def test_purchase_orders_returns_500_on_error(self):
         """Error path: client exception results in 500."""
         mock_client = MagicMock()
         mock_client.list_purchase_orders.side_effect = Exception("Database error")
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders")
 
         self.assertEqual(response.status_code, 500)
@@ -82,7 +82,7 @@ class TestPurchaseOrderDetailEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.get_purchase_order.return_value = MOCK_PURCHASE_ORDER_DETAIL
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders/PO-2024-001")
 
         self.assert_response_ok(response)
@@ -94,7 +94,7 @@ class TestPurchaseOrderDetailEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.get_purchase_order.return_value = MOCK_PURCHASE_ORDER_DETAIL
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders/PO-2024-001")
 
         data = response.json()["data"]
@@ -105,7 +105,7 @@ class TestPurchaseOrderDetailEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.get_purchase_order.return_value = MOCK_PURCHASE_ORDER_DETAIL
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders/PO-2024-001")
 
         mock_client.get_purchase_order.assert_called_with("PO-2024-001")
@@ -115,7 +115,7 @@ class TestPurchaseOrderDetailEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.get_purchase_order.side_effect = Exception("PO not found")
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/purchase-orders/INVALID")
 
         self.assertEqual(response.status_code, 500)

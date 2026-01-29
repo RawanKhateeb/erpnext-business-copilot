@@ -5,8 +5,8 @@ Tests: list suppliers, response structure, error handling.
 
 import unittest
 from unittest.mock import MagicMock, patch
-from base_test import APITestBase
-from mock_data import MOCK_SUPPLIERS
+from backend.tests.api_mock.base_test import APITestBase
+from backend.tests.api_mock.mock_data import MOCK_SUPPLIERS
 
 
 class TestSuppliersEndpoint(APITestBase):
@@ -18,7 +18,7 @@ class TestSuppliersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_suppliers.return_value = MOCK_SUPPLIERS
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/suppliers")
 
         self.assert_response_ok(response)
@@ -31,7 +31,7 @@ class TestSuppliersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_suppliers.return_value = MOCK_SUPPLIERS
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/suppliers")
 
         data = response.json()
@@ -43,7 +43,7 @@ class TestSuppliersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_suppliers.return_value = []
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/suppliers")
 
         self.assert_response_ok(response)
@@ -55,7 +55,7 @@ class TestSuppliersEndpoint(APITestBase):
         mock_client = MagicMock()
         mock_client.list_suppliers.side_effect = Exception("ERPNext connection failed")
 
-        with patch('app.main.get_client', return_value=mock_client):
+        with patch('app.controllers.data.get_client', return_value=mock_client):
             response = self.client.get("/suppliers")
 
         self.assertEqual(response.status_code, 500)

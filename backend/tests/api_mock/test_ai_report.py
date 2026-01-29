@@ -5,8 +5,8 @@ Tests: AI report generation, OpenAI mocking, error handling.
 
 import unittest
 from unittest.mock import MagicMock, patch
-from base_test import APITestBase
-from mock_data import MOCK_AI_REPORT
+from backend.tests.api_mock.base_test import APITestBase
+from backend.tests.api_mock.mock_data import MOCK_AI_REPORT
 
 
 class TestAIReportEndpoint(APITestBase):
