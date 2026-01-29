@@ -34,8 +34,3 @@ test.describe("Copilot User Journey", () => {
     expect(await page.isEnabled("body")).toBeTruthy();
   });
 });
-
-    // Step 7: Type a query for AI report
-    await copilotPage.enterQuery("Generate monthly procurement report");
-  });
-});
