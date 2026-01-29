@@ -2,7 +2,6 @@ fastapi
 uvicorn[standard]
 requests
 python-dotenv
-pytest
 openai>=1.0
 # MCP (Model Context Protocol) support
 mcp>=0.1.0
