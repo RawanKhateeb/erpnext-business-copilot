@@ -70,6 +70,13 @@ jobs:
           npm install
           npx playwright install --with-deps
 
+      - name: Start backend server
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 3
+        env:
+          CI: true
+
       - name: Run UI tests
         run: |
           cd frontend/ui_tests

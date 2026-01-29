@@ -32,10 +32,12 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: "python ../../../app/main.py",
-    url: "http://localhost:8000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: "cd ../.. && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+        url: "http://localhost:8000",
+        reuseExistingServer: true,
+        timeout: 120000,
+      },
 });
