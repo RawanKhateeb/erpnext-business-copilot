@@ -4,5 +4,6 @@ requests
 python-dotenv
 openai>=1.0
 reportlab
+jinja2
 # MCP (Model Context Protocol) support
 mcp>=0.1.0
