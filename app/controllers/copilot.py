@@ -6,11 +6,6 @@ from app.copilot.service import handle_user_input
 router = APIRouter(tags=["copilot"])
 
 
-@router.post("/copilot")
-def copilot(req: QueryRequest):
-    """Handle copilot query."""
-    return handle_user_input(req.query)
-
 
 @router.post("/copilot/ask")
 def copilot_ask(req: QueryRequest):

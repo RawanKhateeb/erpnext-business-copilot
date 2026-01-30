@@ -78,7 +78,7 @@ class AIReportGenerator:
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are a procurement analyst. Generate professional, concise procurement reports based on supplied data. Use business language and highlight key insights."
+                            "content": "You are a professional procurement analyst. Generate well-structured, insightful procurement reports. Use clear section headers, professional business language, and focus on actionable insights. Format key metrics as bullet points. Use line breaks between sections for readability."
                         },
                         {
                             "role": "user",
@@ -97,7 +97,7 @@ class AIReportGenerator:
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are a procurement analyst. Generate professional, concise procurement reports based on supplied data. Use business language and highlight key insights."
+                            "content": "You are a professional procurement analyst. Generate well-structured, insightful procurement reports. Use clear section headers, professional business language, and focus on actionable insights. Format key metrics as bullet points. Use line breaks between sections for readability."
                         },
                         {
                             "role": "user",
@@ -188,7 +188,7 @@ class AIReportGenerator:
             for status, count in status_breakdown.items():
                 status_text += f"\n- {status}: {int(count or 0)}"
         
-        prompt = f"""Generate a CONCISE procurement report for {date_range}.
+        prompt = f"""Generate a professional procurement report for {date_range}.
 
 PROCUREMENT DATA:
 - Total Spending: ${total_spend:,.2f}
@@ -196,24 +196,25 @@ PROCUREMENT DATA:
 - Pending Orders: {pending_count}
 {status_text}{suppliers_text}
 
-CRITICAL FORMAT REQUIREMENT:
-Format the report as bullet points separated by " | " (pipe character).
-Use NO paragraphs, NO line breaks, NO markdown formatting.
-Each bullet should be SHORT (5-10 words max).
-Put all content on one continuous line with bullets separated by " | ".
+FORMAT REQUIREMENTS:
+1. Create clear section headers in ALL CAPS
+2. Start with "EXECUTIVE SUMMARY" - brief overview of procurement activity
+3. Follow with "KEY METRICS" - use bullet points for key numbers
+4. Continue with "SPENDING ANALYSIS" - analyze spending patterns
+5. Add "SUPPLIER PERFORMANCE" - details about top suppliers
+6. Add "ORDER STATUS REVIEW" - review of order statuses
+7. End with "RECOMMENDATIONS" - actionable insights
 
-Example format: Bullet 1 | Bullet 2 | Bullet 3 | Bullet 4 | Bullet 5 | etc.
+STYLE GUIDELINES:
+- Use professional business language
+- Write in clear paragraphs (not bullet points except for metrics)
+- Use line breaks between sections for readability
+- Highlight key insights and potential risks
+- Be concise but thorough
+- Focus on actionable recommendations
+- Format metrics as bullet points with bold labels
 
-Generate bullet points covering:
-- Executive summary (overview of procurement)
-- Total spending and order count
-- Top suppliers and amounts
-- Order status distribution  
-- Key metrics and performance indicators
-- One actionable recommendation
-- Risk assessment if applicable
-
-Keep it SHORT, SCANNABLE, and ALL ON ONE LINE with pipe separators."""
+Generate a well-structured report following this format."""
         
         if query:
             prompt += f"\n\nUser context: {query}"
