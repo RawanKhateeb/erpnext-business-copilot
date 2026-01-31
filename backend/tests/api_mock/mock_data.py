@@ -103,3 +103,57 @@ MOCK_AI_REPORT = {
 MOCK_ERROR_RESPONSE = {
     "detail": "Internal server error"
 }
+
+MOCK_CUSTOMERS = [
+    {
+        "name": "Customer A",
+        "customer_name": "Customer A",
+        "customer_group": "Gold",
+        "country": "USA",
+        "disabled": 0,
+    },
+    {
+        "name": "Customer B",
+        "customer_name": "Customer B",
+        "customer_group": "Silver",
+        "country": "UK",
+        "disabled": 0,
+    },
+]
+
+MOCK_SALES_ORDERS = [
+    {
+        "name": "SO-2026-001",
+        "doctype": "Sales Order",
+        "customer": "Customer A",
+        "customer_name": "Customer A",
+        "total": 10000.00,
+        "status": "To Deliver",
+        "transaction_date": "2026-01-15",
+        "delivery_date": "2026-01-25",
+    },
+]
+
+MOCK_INVOICES = [
+    {
+        "name": "INV-2026-001",
+        "doctype": "Sales Invoice",
+        "customer": "Customer A",
+        "customer_name": "Customer A",
+        "grand_total": 10000.00,
+        "status": "Submitted",
+        "posting_date": "2026-01-20",
+    },
+]
+
+MOCK_QUOTATIONS = [
+    {
+        "name": "QTN-2026-001",
+        "doctype": "Quotation",
+        "party_name": "Customer A",
+        "grand_total": 5000.00,
+        "status": "Open",
+        "transaction_date": "2026-01-10",
+    },
+]
+

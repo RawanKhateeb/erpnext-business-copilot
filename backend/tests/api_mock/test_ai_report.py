@@ -14,7 +14,7 @@ class TestAIReportEndpoint(APITestBase):
 
     def test_ai_report_returns_200_with_report(self):
         """Happy path: AI report endpoint returns 200 with report data."""
-        with patch('app.ai_report_generator.AIReportGenerator') as mock_generator_class:
+        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
             mock_generator = MagicMock()
             mock_generator_class.return_value = mock_generator
             mock_generator.generate.return_value = MOCK_AI_REPORT
@@ -31,7 +31,7 @@ class TestAIReportEndpoint(APITestBase):
 
     def test_ai_report_returns_report_content(self):
         """Response structure: report field contains text."""
-        with patch('app.ai_report_generator.AIReportGenerator') as mock_generator_class:
+        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
             mock_generator = MagicMock()
             mock_generator_class.return_value = mock_generator
             mock_generator.generate.return_value = MOCK_AI_REPORT
@@ -60,7 +60,7 @@ class TestAIReportEndpoint(APITestBase):
 
     def test_ai_report_handles_openai_api_error(self):
         """Error path: OpenAI API failure returns graceful error."""
-        with patch('app.ai_report_generator.AIReportGenerator') as mock_generator_class:
+        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
             mock_generator = MagicMock()
             mock_generator_class.return_value = mock_generator
             mock_generator.generate.side_effect = Exception(
@@ -76,7 +76,7 @@ class TestAIReportEndpoint(APITestBase):
 
     def test_ai_report_handles_network_error(self):
         """Error path: network error during generation."""
-        with patch('app.ai_report_generator.AIReportGenerator') as mock_generator_class:
+        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
             mock_generator = MagicMock()
             mock_generator_class.return_value = mock_generator
             mock_generator.generate.side_effect = ConnectionError(

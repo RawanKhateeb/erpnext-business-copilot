@@ -83,22 +83,13 @@ class TestCopilotAskEndpoint(APITestBase):
 
 
 class TestCopilotEndpoint(APITestBase):
-    """Tests for /copilot endpoint (POST)."""
+    """Tests for /copilot endpoint (deprecated - removed in favor of /copilot/ask)."""
 
-    def test_copilot_requires_query(self):
-        """Validation: query parameter is required."""
-        response = self.client.post("/copilot", json={})
-        self.assertIn(response.status_code, [400, 422])
-
-    def test_copilot_accepts_query_parameter(self):
-        """Happy path: copilot accepts valid query."""
-        mock_client = MagicMock()
-        mock_client.list_suppliers.return_value = MOCK_SUPPLIERS
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            response = self.client.post("/copilot", json={"query": "list suppliers"})
-
-        self.assert_response_ok(response)
+    def test_copilot_endpoint_removed(self):
+        """POST /copilot endpoint should return 404 (removed, use /copilot/ask)."""
+        response = self.client.post("/copilot", json={"query": "test"})
+        # Endpoint was removed in MVC refactor - should 404
+        self.assertEqual(response.status_code, 404)
 
 
 if __name__ == "__main__":
