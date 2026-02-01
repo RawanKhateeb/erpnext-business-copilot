@@ -1,13 +1,13 @@
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
 from app.copilot.intent import parse_intent
-from app.erpnext_client import ERPNextClient
-from app.insights import build_purchase_order_insights
-from app.price_anomaly_detector import detect_price_anomalies
-from app.delayed_orders_detector import detect_delayed_orders
-from app.po_approval_analyzer import analyze_po_approval
-from app.po_risk_analyzer import analyze_po_risks
-from app.recommendation_explainer import explain_recommendations
+from app.models import ERPNextClient
+from app.services.insights import build_purchase_order_insights
+from app.services.price_anomaly_detector import detect_price_anomalies
+from app.services.delayed_orders_detector import detect_delayed_orders
+from app.services.po_approval_analyzer import analyze_po_approval
+from app.services.po_risk_analyzer import analyze_po_risks
+from app.services.recommendation_explainer import explain_recommendations
 
 
 def generate_monthly_report(pos: List[Dict]) -> tuple[str, List[str]]:
