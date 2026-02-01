@@ -67,7 +67,7 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          python -m playwright install chromium
+          python -m playwright install chromium --with-deps
 
       - name: Start backend server
         run: |
