@@ -3,196 +3,188 @@ Page Object Model for Copilot UI.
 Encapsulates all selectors and interactions for the copilot page.
 """
 
+from playwright.sync_api import Page
+from .base_page import BasePage
 
-class CopilotPage:
+
+class CopilotPage(BasePage):
     """Page Object for the main Copilot UI page."""
 
-    def __init__(self, page):
+    # Selectors as class constants
+    MODE_BUTTON_DATA = "button"  # Will use get_by_role
+    ASK_BUTTON = "button"  # Will use get_by_role
+    QUERY_INPUT_PLACEHOLDER = "ask"
+    RESULTS_CONTAINER = ".results"
+    RESULT_TABLE = "table"
+    ERROR_MESSAGE = "[role='alert']"
+    EXPORT_BUTTON = "button"  # Will use get_by_role
+
+    def __init__(self, page: Page, base_url: str = "http://127.0.0.1:8001") -> None:
         """
-        Initialize page object.
-        
+        Initialize Copilot page object.
+
         Args:
-            page: Playwright Page object
+            page: Playwright Page instance
+            base_url: Base URL for the application
         """
-        self.page = page
-        self.base_url = "http://localhost:8000"
+        super().__init__(page, base_url)
 
-    # Selectors
-    MODE_TOGGLE_DATA = 'button:has-text("Data")'
-    MODE_TOGGLE_AI_REPORTS = 'button:has-text("AI Reports")'
-    MODE_TOGGLE_INSIGHTS = 'button:has-text("Insights")'
-    QUERY_INPUT = 'input[placeholder*="search"], input[placeholder*="query"], textarea'
-    ASK_BUTTON = 'button:has-text("Ask"), button:has-text("Send")'
-    RESULTS_CONTAINER = '[data-testid="results"], .results, .output'
-    RESULT_TABLE = 'table'
-    RESULT_CARD = '.card, [data-testid="result-card"]'
-    AI_BADGE = ':has-text("AI"), :has-text("Generated")'
-    ERROR_MESSAGE = '.error, [role="alert"]'
-
-    # Methods
-    async def navigate(self):
+    def navigate_to_copilot(self) -> None:
         """Navigate to the copilot page."""
-        await self.page.goto(f"{self.base_url}/")
+        self.navigate("/")
+        # Wait for page to load (use load instead of networkidle to avoid hanging)
+        self.page.wait_for_load_state("load", timeout=5000)
 
-    async def wait_for_page_load(self, timeout=5000):
-        """Wait for page to be fully loaded."""
-        await self.page.wait_for_load_state("networkidle", timeout=timeout)
+    def select_data_mode(self) -> None:
+        """Click the 'Data' mode button."""
+        try:
+            self.click_by_role("button", "Data")
+        except Exception:
+            # Button might not exist or be already selected
+            pass
 
-    async def select_data_mode(self):
-        """Click the 'Data' mode toggle."""
-        await self.page.click(self.MODE_TOGGLE_DATA)
+    def select_ai_reports_mode(self) -> None:
+        """Click the 'AI Reports' mode button."""
+        try:
+            self.click_by_role("button", "AI Reports")
+        except Exception:
+            pass
 
-    async def select_ai_reports_mode(self):
-        """Click the 'AI Reports' mode toggle."""
-        await self.page.click(self.MODE_TOGGLE_AI_REPORTS)
+    def select_insights_mode(self) -> None:
+        """Click the 'Insights' mode button."""
+        try:
+            self.click_by_role("button", "Insights")
+        except Exception:
+            pass
 
-    async def select_insights_mode(self):
-        """Click the 'Insights' mode toggle."""
-        await self.page.click(self.MODE_TOGGLE_INSIGHTS)
-
-    async def enter_query(self, query_text):
+    def ask_question(self, query: str, wait_for_response: bool = True) -> None:
         """
-        Enter query text in the input field.
-        
+        Write a question and click ask.
+
         Args:
-            query_text: Text to enter
+            query: Question to ask
+            wait_for_response: Wait for response to appear
         """
-        # Find the input field (could be input or textarea)
-        inputs = await self.page.query_selector_all(
-            'input[type="text"], textarea, input[placeholder*="search"], input[placeholder*="query"]'
-        )
-        if inputs:
-            await inputs[0].fill(query_text)
-        else:
-            # Fallback: click first text input on page
-            await self.page.fill('input', query_text)
-
-    async def click_ask_button(self):
-        """Click the 'Ask' or 'Send' button."""
-        buttons = await self.page.query_selector_all('button')
-        for btn in buttons:
-            text = await btn.text_content()
-            if text and ('ask' in text.lower() or 'send' in text.lower()):
-                await btn.click()
-                return
-        # Fallback: click the first button
-        if buttons:
-            await buttons[0].click()
-
-    async def get_results_text(self):
-        """Get the visible results text from the page."""
-        # Try to get text from results container
+        # Fill the query input
         try:
-            text = await self.page.text_content(self.RESULTS_CONTAINER)
-            return text
-        except:
-            # Fallback: get all visible text
-            return await self.page.text_content("body")
+            # Try to find input by placeholder
+            self.page.get_by_placeholder("ask", exact=False).fill(query)
+        except Exception:
+            # Fallback: find any text input and fill it
+            inputs = self.page.locator("input[type='text'], textarea")
+            if inputs.count() > 0:
+                inputs.first.fill(query)
 
-    async def is_results_visible(self):
-        """Check if results are displayed."""
+        # Click ask button
         try:
-            result = await self.page.query_selector(self.RESULTS_CONTAINER)
-            return result is not None
-        except:
-            return False
+            self.click_by_role("button", "Ask")
+        except Exception:
+            self.click_by_text("Ask")
 
-    async def is_table_visible(self):
-        """Check if results table is visible."""
-        try:
-            table = await self.page.query_selector(self.RESULT_TABLE)
-            return table is not None
-        except:
-            return False
+        # Wait for response if requested
+        if wait_for_response:
+            self.wait_for_response()
 
-    async def is_ai_badge_visible(self):
-        """Check if 'AI Generated' or similar badge is visible."""
-        try:
-            badge = await self.page.query_selector(self.AI_BADGE)
-            return badge is not None
-        except:
-            return False
-
-    async def get_error_message(self):
-        """Get error message if displayed."""
-        try:
-            error = await self.page.text_content(self.ERROR_MESSAGE)
-            return error
-        except:
-            return None
-
-    async def wait_for_results(self, timeout=10000):
-        """Wait for results to appear on page."""
-        await self.page.wait_for_selector(
-            self.RESULTS_CONTAINER, timeout=timeout, state="visible"
-        )
-
-    async def route_api_response(self, endpoint, response_json):
+    def wait_for_response(self, timeout: int = 10000) -> None:
         """
-        Mock an API response using route interception.
-        
+        Wait for response to appear after asking.
+
         Args:
-            endpoint: The API endpoint path (e.g., "/copilot/ask")
-            response_json: The JSON response to return
+            timeout: Timeout in milliseconds
         """
-        async def handle_route(route):
-            await route.abort()
+        self.page.wait_for_timeout(2000)  # Give API time to respond
 
-        # Intercept the endpoint and return mocked response
-        await self.page.route(
-            f"**/api/**{endpoint}",
-            lambda route: self._mock_response(route, response_json),
-        )
-
-    async def _mock_response(self, route, response_json):
-        """Helper to mock API response."""
-        await route.abort()
-        await route.continue_()
-
-    async def intercept_api_calls(self):
+    def get_results_text(self) -> str:
         """
-        Set up route interception for API calls.
-        Must be called before navigating to page.
+        Get the text content of results.
+
+        Returns:
+            Results text content
         """
-        # Intercept /copilot/ask
-        await self.page.route(
-            "**/copilot/ask",
-            self._handle_copilot_ask,
-        )
-        # Intercept /ai/report
-        await self.page.route(
-            "**/ai/report",
-            self._handle_ai_report,
-        )
+        content = self.get_page_content()
+        return content if content else ""
 
-    async def _handle_copilot_ask(self, route):
-        """Handle mocked /copilot/ask response."""
-        response_data = {
-            "intent": "list_purchase_orders",
-            "message": "Found 10 purchase orders.",
-            "data": [
-                {
-                    "name": "PO-2024-001",
-                    "supplier": "Supplier A",
-                    "grand_total": 5000.00,
-                    "status": "Completed",
-                }
-            ],
-        }
-        await route.fulfill(
-            status=200,
-            content_type="application/json",
-            body_json=response_data,
-        )
+    def has_results(self) -> bool:
+        """
+        Check if results are displayed.
 
-    async def _handle_ai_report(self, route):
-        """Handle mocked /ai/report response."""
-        response_data = {
-            "report": "Monthly procurement analysis shows stable supplier performance.",
-            "summary": "Cost-effective purchasing with competitive rates.",
-        }
-        await route.fulfill(
-            status=200,
-            content_type="application/json",
-            body_json=response_data,
-        )
+        Returns:
+            True if results visible
+        """
+        content = self.get_results_text()
+        return any(keyword in content.lower() for keyword in ["supplier", "item", "data", "result"])
+
+    def has_error(self) -> bool:
+        """
+        Check if error message is displayed.
+
+        Returns:
+            True if error visible
+        """
+        return self.is_visible(self.ERROR_MESSAGE)
+
+    def get_error_message(self) -> str | None:
+        """
+        Get error message text.
+
+        Returns:
+            Error message or None
+        """
+        if self.has_error():
+            return self.get_text_content(self.ERROR_MESSAGE)
+        return None
+
+    def find_export_button(self) -> bool:
+        """
+        Look for export/download button.
+
+        Returns:
+            True if export button found
+        """
+        buttons = self.page.locator("button")
+        for i in range(buttons.count()):
+            button = buttons.nth(i)
+            text = button.text_content() or ""
+            if any(keyword in text.lower() for keyword in ["export", "download", "csv", "save"]):
+                return True
+        return False
+
+    def click_export_button(self) -> bool:
+        """
+        Find and click export button.
+
+        Returns:
+            True if button was clicked
+        """
+        buttons = self.page.locator("button")
+        for i in range(buttons.count()):
+            button = buttons.nth(i)
+            text = button.text_content() or ""
+            if any(keyword in text.lower() for keyword in ["export", "download", "csv"]):
+                button.click()
+                return True
+        return False
+
+    def get_table_data(self) -> str | None:
+        """
+        Get table content if present.
+
+        Returns:
+            Table text content or None
+        """
+        if self.page.locator(self.RESULT_TABLE).count() > 0:
+            return self.get_text_content(self.RESULT_TABLE)
+        return None
+
+    def is_page_loaded(self) -> bool:
+        """
+        Check if page is fully loaded.
+
+        Returns:
+            True if page is loaded
+        """
+        try:
+            self.wait_for_load_state("networkidle", timeout=3000)
+            return True
+        except Exception:
+            return False

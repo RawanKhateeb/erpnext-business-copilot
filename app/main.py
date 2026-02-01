@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
 
@@ -24,6 +25,15 @@ app = FastAPI(
     title="ERPNext Business Copilot",
     description="AI-powered assistant for ERPNext business data",
     version="1.0.0"
+)
+
+# Add CORS middleware to allow requests from frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Set up Jinja2 templates
