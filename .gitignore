@@ -3,4 +3,4 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
-server.log
+server.log.pytest_cache/
