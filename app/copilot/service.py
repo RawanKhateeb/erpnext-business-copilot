@@ -233,7 +233,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
     - Activates the right tool (ERPNextClient methods)
     - Returns structured response with answer, insights, data, and next_questions
     """
-    intent = None  # Initialize to avoid UnboundLocalError in exception handlers
+    intent = "unknown"  # Initialize to avoid UnboundLocalError in exception handlers
     try:
         if not text or not isinstance(text, str):
             return {
@@ -244,9 +244,10 @@ def handle_user_input(text: str) -> Dict[str, Any]:
                 "next_questions": ["List suppliers", "Show purchase orders", "What's the total spend?"]
             }
         
-        client = ERPNextClient()
         parsed = parse_intent(text)
         intent = parsed.get("intent")
+        
+        client = ERPNextClient()
         
         if not intent or intent == "unknown":
             return {
