@@ -233,6 +233,7 @@ def handle_user_input(text: str) -> Dict[str, Any]:
     - Activates the right tool (ERPNextClient methods)
     - Returns structured response with answer, insights, data, and next_questions
     """
+    intent = None  # Initialize to avoid UnboundLocalError in exception handlers
     try:
         if not text or not isinstance(text, str):
             return {
