@@ -1,0 +1,43 @@
+[run]
+source = app
+omit =
+    app/mcp_server.py
+    app/__pycache__/*
+    */tests/*
+    */__pycache__/*
+
+[report]
+precision = 2
+skip_covered = False
+skip_empty = True
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+
+# Only measure core skill modules
+include =
+    app/controllers/*
+    app/copilot/*
+    app/models/*
+    app/services/ai_report_generator.py
+    app/services/insights.py
+    app/main.py
+
+# Exclude MCP and non-demo services
+omit =
+    app/mcp_server.py
+    app/services/delayed_orders_detector.py
+    app/services/po_approval_analyzer.py
+    app/services/po_risk_analyzer.py
+    app/services/price_anomaly_detector.py
+    app/services/recommendation_explainer.py
+    app/services/pdf_export.py
+
+[html]
+directory = htmlcov

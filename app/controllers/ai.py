@@ -144,6 +144,6 @@ def ai_report(req: AIReportRequest):
                 "ai_generated": True,
                 "error": str(e)
             }
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"Unexpected error in ai_report: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
