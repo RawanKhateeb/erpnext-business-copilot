@@ -240,7 +240,10 @@ class TestServiceIntegration(unittest.TestCase):
 
     def test_approve_po_without_name_intent(self):
         """Test approve_po intent without PO name."""
-        result = handle_user_input("Approve the purchase order")
+        mock_client = MagicMock()
+        
+        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
+            result = handle_user_input("Approve the purchase order")
 
         # Should recognize approve_po intent
         self.assertEqual(result["intent"], "approve_po")
