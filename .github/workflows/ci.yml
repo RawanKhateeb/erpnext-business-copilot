@@ -34,6 +34,12 @@ jobs:
 
       - name: Run backend mock tests
         run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing .coveragerc files:"
+          find . -name ".coveragerc" -type f
+          echo "Contents of .coveragerc:"
+          cat ./.coveragerc
+          echo "---"
           python -m coverage run --source=app -m pytest backend/tests/api_mock -v
           python -m coverage xml
           python -m coverage report --precision=2
