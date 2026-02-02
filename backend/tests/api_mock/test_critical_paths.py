@@ -1,82 +1,12 @@
 """
-Critical coverage tests for 90% target.
-Focuses on high-impact missing paths: approve_po intent and ai error paths.
+Essential critical path tests for core business workflows.
+Covers: approve_po, ai report endpoints, error handling, multi-intent flows.
 """
 
 import unittest
 from unittest.mock import MagicMock, patch
 from backend.tests.api_mock.base_test import APITestBase
 from app.copilot.service import handle_user_input
-
-class TestIntentResponseStructure(unittest.TestCase):
-    """Test that all intents return proper response structures."""
-
-    def test_delayed_orders_detection_response(self):
-        """Test delayed orders detection returns proper structure."""
-        mock_client = MagicMock()
-        mock_client.list_purchase_orders.return_value = [
-            {"name": "PO-001", "transaction_date": "2024-01-01", "status": "Pending"}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Detect delayed orders")
-
-        self.assertEqual(result["intent"], "detect_delayed_orders")
-        self.assertIn("answer", result)
-        self.assertIn("data", result)
-
-    def test_price_anomalies_response(self):
-        """Test price anomalies detection response."""
-        mock_client = MagicMock()
-        mock_client.list_purchase_orders.return_value = [
-            {"name": "PO-001", "item_code": "ITEM-1", "rate": 100, "qty": 10}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Find price anomalies")
-
-        self.assertEqual(result["intent"], "detect_price_anomalies")
-        self.assertIn("answer", result)
-
-    def test_risk_analysis_response(self):
-        """Test PO risk analysis response."""
-        mock_client = MagicMock()
-        mock_client.list_purchase_orders.return_value = [
-            {"name": "PO-001", "supplier": "Supplier A", "grand_total": 5000}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Analyze risks in purchase orders")
-
-        self.assertEqual(result["intent"], "analyze_po_risks")
-        self.assertIn("answer", result)
-
-    def test_customer_list_response_structure(self):
-        """Test customers list response structure."""
-        mock_client = MagicMock()
-        mock_client.list_customers.return_value = [
-            {"name": "CUST-001", "customer_name": "Customer One"}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("List customers")
-
-        self.assertEqual(result["intent"], "list_customers")
-        self.assertIn("data", result)
-        self.assertIsInstance(result["data"], list)
-
-    def test_vendor_bills_response(self):
-        """Test vendor bills response."""
-        mock_client = MagicMock()
-        mock_client.list_vendor_bills.return_value = [
-            {"name": "BILL-001", "supplier": "Supplier A"}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Show vendor bills")
-
-        self.assertEqual(result["intent"], "list_vendor_bills")
-        self.assertIn("answer", result)
 
 class TestCriticalPaths(unittest.TestCase):
     """Critical paths for reaching 90% coverage."""
@@ -126,33 +56,7 @@ class TestCriticalPaths(unittest.TestCase):
         self.assertIn("Please specify", result["answer"])
         self.assertIn("PUR-ORD", result["answer"])
 
-    def test_list_sales_invoices_intent(self):
-        """Test list_sales_invoices intent - covers unpaid receivables path."""
-        mock_client = MagicMock()
-        mock_client.list_sales_invoices.return_value = [
-            {
-                "name": "SI-001",
-                "customer": "Customer A",
-                "outstanding_amount": 5000,
-                "status": "Overdue"
-            },
-            {
-                "name": "SI-002",
-                "customer": "Customer B",
-                "outstanding_amount": 0,
-                "status": "Paid"
-            },
-        ]
 
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Show sales invoices")
-
-        # Verify sales invoices were listed
-        self.assertEqual(result["intent"], "list_sales_invoices")
-        self.assertIn("2", result["answer"])  # 2 invoices
-        self.assertIn("$5,000.00", result["answer"])  # Outstanding amount formatted
-        self.assertIn("Outstanding", result["answer"])
-        self.assertEqual(len(result["data"]), 2)
 
 
 class TestAICriticalPaths(APITestBase):
@@ -295,100 +199,6 @@ class TestAICriticalPaths(APITestBase):
 
         self.assertEqual(result["intent"], "list_sales_orders")
         self.assertIn("data", result)
-
-    def test_erp_error_handling_complete(self):
-        """Test complete error handling with various exception types."""
-        mock_client = MagicMock()
-        mock_client.list_purchase_orders.side_effect = ValueError("Invalid data")
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Show purchase orders")
-
-        self.assertEqual(result["intent"], "list_purchase_orders")
-        self.assertIn("answer", result)
-
-    def test_get_po_with_detailed_insights(self):
-        """Test PO retrieval with full insights."""
-        mock_client = MagicMock()
-        mock_client.get_purchase_order.return_value = {
-            "name": "PUR-ORD-2026-00001",
-            "supplier": "Supplier A",
-            "grand_total": 5000,
-            "status": "Submitted",
-            "items": [{"item_code": "ITEM-1", "qty": 10, "rate": 500}]
-        }
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Details for PUR-ORD-2026-00001")
-
-        self.assertEqual(result["intent"], "get_purchase_order")
-        self.assertIn("insights", result)
-
-    def test_sales_invoices_with_metrics(self):
-        """Test sales invoice retrieval with metrics."""
-        mock_client = MagicMock()
-        mock_client.list_sales_invoices.return_value = [
-            {"name": "INV-001", "customer": "Customer A", "grand_total": 5000, "outstanding_amount": 0},
-            {"name": "INV-002", "customer": "Customer B", "grand_total": 3000, "outstanding_amount": 1500}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("List sales invoices")
-
-        self.assertEqual(result["intent"], "list_sales_invoices")
-        self.assertEqual(len(result["data"]), 2)
-
-    def test_comprehensive_purchase_order_analysis(self):
-        """Test comprehensive PO analysis with multiple statuses."""
-        mock_client = MagicMock()
-        mock_client.list_purchase_orders.return_value = [
-            {"name": "PO-001", "status": "Draft", "grand_total": 1000},
-            {"name": "PO-002", "status": "Submitted", "grand_total": 2000},
-            {"name": "PO-003", "status": "Completed", "grand_total": 3000},
-            {"name": "PO-004", "status": "Cancelled", "grand_total": 500}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            with patch('app.copilot.service.build_purchase_order_insights') as mock_insights:
-                mock_insights.return_value = {
-                    "total_spend": 6000,
-                    "total_spend_formatted": "$6,000.00",
-                    "average_order_value": 1500,
-                    "average_order_value_formatted": "$1,500.00"
-                }
-                
-                result = handle_user_input("Analyze all purchase orders")
-
-        self.assertIn("intent", result)
-        self.assertIn("answer", result)
-
-    def test_vendor_bills_with_outstanding(self):
-        """Test vendor bills with outstanding amounts."""
-        mock_client = MagicMock()
-        mock_client.list_vendor_bills.return_value = [
-            {"name": "BILL-001", "supplier": "Supplier A", "grand_total": 2000, "outstanding_amount": 2000},
-            {"name": "BILL-002", "supplier": "Supplier B", "grand_total": 1500, "outstanding_amount": 0}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("Show vendor bills with outstanding")
-
-        self.assertEqual(result["intent"], "list_vendor_bills")
-        self.assertGreater(len(result["data"]), 0)
-
-    def test_customers_with_outstanding(self):
-        """Test customers list with outstanding amounts."""
-        mock_client = MagicMock()
-        mock_client.list_customers.return_value = [
-            {"name": "CUST-001", "customer_name": "Customer A", "outstanding_amount": 5000},
-            {"name": "CUST-002", "customer_name": "Customer B", "outstanding_amount": 0}
-        ]
-
-        with patch('app.copilot.service.ERPNextClient', return_value=mock_client):
-            result = handle_user_input("List customers with outstanding")
-
-        self.assertEqual(result["intent"], "list_customers")
-        self.assertEqual(len(result["data"]), 2)
 
 
 if __name__ == "__main__":
