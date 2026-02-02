@@ -34,7 +34,9 @@ jobs:
 
       - name: Run backend mock tests
         run: |
-          python -m pytest backend/tests/api_mock -v --cov=app --cov-report=xml --cov-report=term --cov-report=html --cov-config=.coveragerc
+          python -m coverage run --source=app -m pytest backend/tests/api_mock -v
+          python -m coverage xml
+          python -m coverage report --precision=2
         env:
           # Mock tests do NOT require real ERPNext or OpenAI
           PYTHONPATH: ${{ github.workspace }}
