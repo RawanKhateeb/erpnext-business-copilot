@@ -10,11 +10,6 @@ coverage:
   round: down
   range: "70..100"
 
-# Ignore pragma: no cover lines in coverage calculation
-# This ensures Codecov respects the same exclusions as local coverage.py
-ignore:
-  - "pragma: no cover"
-
 parsers:
   gcov:
     branch_detection:
