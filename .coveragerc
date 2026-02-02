@@ -1,5 +1,4 @@
 [run]
-branch = True
 source = app
 omit =
     app/mcp_server.py
