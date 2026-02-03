@@ -1,49 +1,30 @@
-"""
-Pytest configuration for Playwright tests.
-Provides fixtures and configuration for all tests.
-"""
-
+"""Pytest configuration for Playwright UI tests."""
+import os
 import pytest
-from playwright.sync_api import sync_playwright, Browser, Page
+from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
 
 
 @pytest.fixture(scope="session")
 def browser() -> Browser:
-    """
-    Create a browser instance for the session.
-
-    Yields:
-        Browser instance
-    """
+    """Create a browser instance for the test session."""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         yield browser
         browser.close()
 
 
+@pytest.fixture(scope="session")
+def context(browser: Browser) -> BrowserContext:
+    """Create a browser context for the test session."""
+    context = browser.new_context(ignore_https_errors=True)
+    yield context
+    context.close()
+
+
 @pytest.fixture
-def page(browser: Browser) -> Page:
-    """
-    Create a page instance for each test.
-
-    Args:
-        browser: Browser fixture
-
-    Yields:
-        Page instance
-    """
-    page = browser.new_page()
+def page(context: BrowserContext) -> Page:
+    """Create a new page for each test."""
+    page = context.new_page()
     yield page
     page.close()
 
-
-@pytest.fixture(autouse=True)
-def test_setup(page: Page) -> None:
-    """
-    Setup before each test.
-
-    Args:
-        page: Page fixture
-    """
-    # Add any test setup here
-    pass
