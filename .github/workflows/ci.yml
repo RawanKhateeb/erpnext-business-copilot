@@ -83,8 +83,8 @@ jobs:
           python -m pytest frontend/ui_tests -v --tb=short
         env:
           CI: true
-          # ✅ חשוב: UI tests אצלך רצים מול ngrok
           BASE_URL: https://wiser-rosina-vaulted.ngrok-free.dev
+
 
   test-summary:
     name: Test Summary
