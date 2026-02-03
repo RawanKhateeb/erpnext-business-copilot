@@ -9,7 +9,7 @@ from playwright.sync_api import Page, expect
 class BasePage:
     """Base class for all page objects using Playwright Sync API."""
 
-    def __init__(self, page: Page, base_url: str = "http://127.0.0.1:8001") -> None:
+    def __init__(self, page: Page, base_url: str = "http://127.0.0.1:8000") -> None:
         """
         Initialize page object.
 

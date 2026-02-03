@@ -19,7 +19,7 @@ class CopilotPage(BasePage):
     ERROR_MESSAGE = "[role='alert']"
     EXPORT_BUTTON = "button"  # Will use get_by_role
 
-    def __init__(self, page: Page, base_url: str = "http://127.0.0.1:8001") -> None:
+    def __init__(self, page: Page, base_url: str = "http://127.0.0.1:8000") -> None:
         """
         Initialize Copilot page object.
 

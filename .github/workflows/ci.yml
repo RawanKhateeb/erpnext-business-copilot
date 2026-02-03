@@ -31,14 +31,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install coverage
 
       - name: Run backend mock tests
         run: |
+          python -m coverage erase
           python -m coverage run --source=app -m pytest backend/tests/api_mock -v
           python -m coverage report --precision=2
+          python -m coverage xml -o coverage.xml
         env:
-          # Mock tests do NOT require real ERPNext or OpenAI
           PYTHONPATH: ${{ github.workspace }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
 
   ui-tests:
     name: UI Tests (Playwright)
@@ -78,7 +87,6 @@ jobs:
         run: |
           python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 > /tmp/server.log 2>&1 &
           sleep 5
-          # Check if server started
           curl -f http://127.0.0.1:8001/ || (cat /tmp/server.log && exit 1)
         env:
           CI: true

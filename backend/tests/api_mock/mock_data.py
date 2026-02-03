@@ -146,6 +146,29 @@ MOCK_INVOICES = [
     },
 ]
 
+MOCK_SALES_INVOICES = [
+    {
+        "name": "SI-2026-001",
+        "doctype": "Sales Invoice",
+        "customer": "Customer A",
+        "customer_name": "Customer A",
+        "grand_total": 5000.00,
+        "outstanding_amount": 0,
+        "status": "Paid",
+        "posting_date": "2026-01-15",
+    },
+    {
+        "name": "SI-2026-002",
+        "doctype": "Sales Invoice",
+        "customer": "Customer B",
+        "customer_name": "Customer B",
+        "grand_total": 3000.00,
+        "outstanding_amount": 1500,
+        "status": "Overdue",
+        "posting_date": "2025-12-20",
+    },
+]
+
 MOCK_QUOTATIONS = [
     {
         "name": "QTN-2026-001",
@@ -154,6 +177,14 @@ MOCK_QUOTATIONS = [
         "grand_total": 5000.00,
         "status": "Open",
         "transaction_date": "2026-01-10",
+    },
+    {
+        "name": "QTN-2026-002",
+        "doctype": "Quotation",
+        "party_name": "Customer B",
+        "grand_total": 2500.00,
+        "status": "Open",
+        "transaction_date": "2026-01-12",
     },
 ]
 
