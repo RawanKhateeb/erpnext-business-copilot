@@ -1,5 +1,4 @@
 """Pytest configuration for Playwright UI tests."""
-import os
 import pytest
 from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
 
@@ -8,7 +7,9 @@ from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
 def browser() -> Browser:
     """Create a browser instance for the test session."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=False  # אפשר True ב-CI, False בלוקאל
+        )
         yield browser
         browser.close()
 
@@ -16,7 +17,16 @@ def browser() -> Browser:
 @pytest.fixture(scope="session")
 def context(browser: Browser) -> BrowserContext:
     """Create a browser context for the test session."""
-    context = browser.new_context(ignore_https_errors=True)
+
+    context = browser.new_context(
+        ignore_https_errors=True,
+
+        # ✅ זה החלק שעוקף את ngrok
+        extra_http_headers={
+            "ngrok-skip-browser-warning": "true"
+        }
+    )
+
     yield context
     context.close()
 
@@ -27,4 +37,3 @@ def page(context: BrowserContext) -> Page:
     page = context.new_page()
     yield page
     page.close()
-
