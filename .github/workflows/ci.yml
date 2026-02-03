@@ -85,9 +85,9 @@ jobs:
 
       - name: Start backend server
         run: |
-          python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 > /tmp/server.log 2>&1 &
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/server.log 2>&1 &
           sleep 5
-          curl -f http://127.0.0.1:8001/ || (cat /tmp/server.log && exit 1)
+          curl -f http://127.0.0.1:8000/ || (cat /tmp/server.log && exit 1)
         env:
           CI: true
 
