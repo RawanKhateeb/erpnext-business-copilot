@@ -1,108 +1,176 @@
 """
-Unit tests for /ai/report endpoint.
-Tests: AI report generation, OpenAI mocking, error handling.
+Unittest-based API tests for AI report endpoint.
+Tests POST /ai/report using FastAPI TestClient and unittest.mock.
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
-from backend.tests.api_mock.base_test import APITestBase
-from backend.tests.api_mock.mock_data import MOCK_AI_REPORT
+from unittest.mock import patch, MagicMock
+from fastapi.testclient import TestClient
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+
+from app.main import app
 
 
-class TestAIReportEndpoint(APITestBase):
-    """Tests for /ai/report endpoint."""
+class TestAIReportEndpoint(unittest.TestCase):
+    """Test AI report endpoint."""
 
-    def test_ai_report_returns_200_with_report(self):
-        """Happy path: AI report endpoint returns 200 with report data."""
-        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
-            mock_generator = MagicMock()
-            mock_generator_class.return_value = mock_generator
-            mock_generator.generate.return_value = MOCK_AI_REPORT
+    @classmethod
+    def setUpClass(cls):
+        """Set up test client once for all tests."""
+        cls.client = TestClient(app)
 
-            response = self.client.post(
-                "/ai/report", json={"query": "Generate monthly report"}
-            )
+    # ============ POST /ai/report ============
+    @patch('app.controllers.ai.get_client')
+    @patch('app.controllers.ai.AIReportGenerator')
+    def test_ai_report_success(self, mock_report_gen, mock_get_client):
+        """Test POST /ai/report generates report successfully."""
+        mock_client = MagicMock()
+        mock_client.list_purchase_orders.return_value = [
+            {"name": "PO-001", "supplier": "Supplier A", "grand_total": 5000, "status": "Submitted"}
+        ]
+        mock_get_client.return_value = mock_client
 
-        self.assert_response_ok(response)
+        mock_generator = MagicMock()
+        mock_generator.generate.return_value = "Monthly procurement report shows stable performance."
+        mock_report_gen.return_value = mock_generator
+
+        response = self.client.post(
+            "/ai/report",
+            json={"query": "Generate monthly report"}
+        )
+
+        self.assertEqual(response.status_code, 200)
         data = response.json()
-        # Check for either 'report' or 'answer' field (API may return either)
-        has_report = "report" in data or "answer" in data or "ai_generated" in data
-        self.assertTrue(has_report, "Response should contain report/answer data")
+        self.assertTrue(data.get("success"))
+        self.assertEqual(data.get("intent"), "ai_report")
+        self.assertTrue(data.get("ai_generated"))
+        self.assertIn("answer", data)
 
-    def test_ai_report_returns_report_content(self):
-        """Response structure: report field contains text."""
-        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
-            mock_generator = MagicMock()
-            mock_generator_class.return_value = mock_generator
-            mock_generator.generate.return_value = MOCK_AI_REPORT
+    @patch('app.controllers.ai.get_client')
+    def test_ai_report_no_purchase_orders(self, mock_get_client):
+        """Test POST /ai/report when no purchase orders available."""
+        mock_client = MagicMock()
+        mock_client.list_purchase_orders.return_value = []
+        mock_get_client.return_value = mock_client
 
-            response = self.client.post(
-                "/ai/report", json={"query": "Generate report"}
-            )
+        response = self.client.post(
+            "/ai/report",
+            json={"query": "Generate report"}
+        )
 
+        self.assertEqual(response.status_code, 200)
         data = response.json()
-        # API returns either 'report', 'answer', or 'ai_generated' field
-        content = data.get("report") or data.get("answer") or data.get("ai_generated")
-        # Content can be str or dict with text inside
-        if isinstance(content, dict):
-            content = str(content)
-        self.assertTrue(content is not None, f"Expected report/answer field, got: {data}")
+        self.assertFalse(data.get("success"))
+        self.assertIn("No purchase order", data.get("message", ""))
 
-    def test_ai_report_missing_query_parameter(self):
-        """Error path: missing query parameter."""
-        response = self.client.post("/ai/report", json={})
-        self.assertIn(response.status_code, [400, 422])
+    @patch('app.controllers.ai.get_client')
+    def test_ai_report_erp_connection_error(self, mock_get_client):
+        """Test POST /ai/report handles ERP connection errors."""
+        mock_client = MagicMock()
+        mock_client.list_purchase_orders.side_effect = Exception("Connection failed")
+        mock_get_client.return_value = mock_client
 
-    def test_ai_report_empty_query(self):
-        """Error path: empty query string."""
-        response = self.client.post("/ai/report", json={"query": ""})
-        self.assertIn(response.status_code, [200, 400, 422])
+        response = self.client.post(
+            "/ai/report",
+            json={"query": "Generate report"}
+        )
 
-    def test_ai_report_handles_openai_api_error(self):
-        """Error path: OpenAI API failure returns graceful error."""
-        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
-            mock_generator = MagicMock()
-            mock_generator_class.return_value = mock_generator
-            mock_generator.generate.side_effect = Exception(
-                "OpenAI API key invalid"
-            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data.get("success"))
 
-            response = self.client.post(
-                "/ai/report", json={"query": "Generate report"}
-            )
+    @patch('app.controllers.ai.get_client')
+    @patch('app.controllers.ai.AIReportGenerator')
+    def test_ai_report_with_summary(self, mock_report_gen, mock_get_client):
+        """Test POST /ai/report response includes summary data."""
+        mock_client = MagicMock()
+        mock_client.list_purchase_orders.return_value = [
+            {"name": "PO-001", "supplier": "Supplier A", "grand_total": 5000, "status": "Submitted"},
+            {"name": "PO-002", "supplier": "Supplier B", "grand_total": 3000, "status": "Draft"}
+        ]
+        mock_get_client.return_value = mock_client
 
-        # Should not crash; may return 500 or error message
-        self.assertIn(response.status_code, [200, 500])
+        mock_generator = MagicMock()
+        mock_generator.generate.return_value = "Analysis complete."
+        mock_report_gen.return_value = mock_generator
 
-    def test_ai_report_handles_network_error(self):
-        """Error path: network error during generation."""
-        with patch('app.services.ai_report_generator.AIReportGenerator') as mock_generator_class:
-            mock_generator = MagicMock()
-            mock_generator_class.return_value = mock_generator
-            mock_generator.generate.side_effect = ConnectionError(
-                "Failed to reach OpenAI"
-            )
+        response = self.client.post(
+            "/ai/report",
+            json={"query": "Generate comprehensive report"}
+        )
 
-            response = self.client.post(
-                "/ai/report", json={"query": "Generate report"}
-            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get("success"))
+        # Response should include answer or summary with po information
+        self.assertIn("answer", data)
 
-        self.assertIn(response.status_code, [200, 500])
+    @patch('app.controllers.ai.get_client')
+    @patch('app.controllers.ai.AIReportGenerator')
+    def test_ai_report_response_structure(self, mock_report_gen, mock_get_client):
+        """Test POST /ai/report response has required structure."""
+        mock_client = MagicMock()
+        mock_client.list_purchase_orders.return_value = [
+            {"name": "PO-001", "supplier": "Supplier A", "grand_total": 5000, "status": "Submitted"}
+        ]
+        mock_get_client.return_value = mock_client
 
-    def test_ai_report_request_structure(self):
-        """Validation: request must have 'query' field."""
-        response = self.client.post("/ai/report", json={"prompt": "invalid"})
-        self.assertIn(response.status_code, [400, 422])
+        mock_generator = MagicMock()
+        mock_generator.generate.return_value = "Report generated."
+        mock_report_gen.return_value = mock_generator
 
+        response = self.client.post(
+            "/ai/report",
+            json={"query": "Generate report", "period": "month"}
+        )
 
-class TestAIReportData(unittest.TestCase):
-    """Tests for AI report data structure."""
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Check required fields
+        self.assertIn("success", data)
+        self.assertIn("intent", data)
+        self.assertIn("ai_generated", data)
 
-    def test_mock_ai_report_structure(self):
-        """Mock report data is properly structured."""
-        self.assertIn("report", MOCK_AI_REPORT)
-        self.assertIn("summary", MOCK_AI_REPORT)
-        self.assertIsInstance(MOCK_AI_REPORT["report"], str)
+    @patch('app.controllers.ai.get_client')
+    def test_ai_report_missing_query(self, mock_get_client):
+        """Test POST /ai/report with missing query parameter."""
+        response = self.client.post(
+            "/ai/report",
+            json={}
+        )
+
+        # Should return 422 (Unprocessable Entity) for missing required field
+        self.assertEqual(response.status_code, 422)
+
+    @patch('app.controllers.ai.get_client')
+    @patch('app.controllers.ai.AIReportGenerator')
+    def test_ai_report_procurement_analysis(self, mock_report_gen, mock_get_client):
+        """Test POST /ai/report with procurement analysis query."""
+        mock_client = MagicMock()
+        mock_client.list_purchase_orders.return_value = [
+            {"name": "PO-001", "supplier": "Supplier A", "grand_total": 5000, "status": "Completed"},
+            {"name": "PO-002", "supplier": "Supplier A", "grand_total": 3500, "status": "Submitted"},
+            {"name": "PO-003", "supplier": "Supplier B", "grand_total": 2000, "status": "Draft"}
+        ]
+        mock_get_client.return_value = mock_client
+
+        mock_generator = MagicMock()
+        mock_generator.generate.return_value = "Procurement analysis shows Supplier A is our top vendor."
+        mock_report_gen.return_value = mock_generator
+
+        response = self.client.post(
+            "/ai/report",
+            json={"query": "Analyze procurement trends"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get("success"))
+        self.assertEqual(data.get("intent"), "ai_report")
 
 
 if __name__ == "__main__":

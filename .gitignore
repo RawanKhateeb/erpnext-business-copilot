@@ -1,6 +1,31 @@
+# Virtual environment
 .venv/
+
+# Python cache
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Environment variables
 .env
-.DS_Store
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+
+# Allure reports
+allure-results/
+allure-report/
+
+# Logs
+*.log
 server.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/

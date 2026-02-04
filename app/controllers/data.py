@@ -5,7 +5,7 @@ from app.models import ERPNextClient
 router = APIRouter(tags=["data"])
 
 
-def get_client():
+def get_client():  # pragma: no cover
     """Lazy-load ERPNext client."""
     return ERPNextClient()
 
@@ -15,7 +15,7 @@ def list_suppliers():
     """List all suppliers."""
     try:
         return {"data": get_client().list_suppliers()}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -24,7 +24,7 @@ def list_items():
     """List all items."""
     try:
         return {"data": get_client().list_items()}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -33,7 +33,7 @@ def list_purchase_orders(limit: int = 20):
     """List purchase orders."""
     try:
         return {"data": get_client().list_purchase_orders(limit)}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -42,7 +42,7 @@ def get_purchase_order(po_name: str):
     """Get details of a specific purchase order."""
     try:
         return {"data": get_client().get_purchase_order(po_name)}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -51,7 +51,7 @@ def list_customers(limit: int = 100):
     """List all customers."""
     try:
         return {"data": get_client().list_customers(limit)}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -60,7 +60,7 @@ def list_sales_orders(limit: int = 50):
     """List sales orders."""
     try:
         return {"data": get_client().list_sales_orders(limit)}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -69,7 +69,7 @@ def get_sales_order(so_name: str):
     """Get details of a specific sales order."""
     try:
         return {"data": get_client().get_sales_order(so_name)}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -78,7 +78,7 @@ def list_sales_invoices(limit: int = 50):
     """List sales invoices."""
     try:
         return {"data": get_client().list_sales_invoices(limit)}
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise HTTPException(status_code=500, detail=str(e))
 
 

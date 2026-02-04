@@ -1,49 +1,46 @@
-"""
-Pytest configuration for Playwright tests.
-Provides fixtures and configuration for all tests.
-"""
-
+"""Pytest configuration for Playwright UI tests."""
+import os
 import pytest
-from playwright.sync_api import sync_playwright, Browser, Page
+from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
 
 
 @pytest.fixture(scope="session")
 def browser() -> Browser:
-    """
-    Create a browser instance for the session.
+    """Create a browser instance for the test session."""
 
-    Yields:
-        Browser instance
-    """
+    # אם רץ ב-CI → headless
+    headless = os.getenv("CI", "false").lower() == "true"
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=headless)
         yield browser
         browser.close()
 
 
+@pytest.fixture(scope="session")
+def context(browser: Browser) -> BrowserContext:
+    """Create a browser context for the test session."""
+
+    context = browser.new_context(
+        ignore_https_errors=True,
+
+        # עוקף אזהרת ngrok
+        extra_http_headers={
+            "ngrok-skip-browser-warning": "true"
+        },
+
+        # מאפשר הורדות PDF
+        accept_downloads=True,
+    )
+
+    yield context
+    context.close()
+
+
 @pytest.fixture
-def page(browser: Browser) -> Page:
-    """
-    Create a page instance for each test.
+def page(context: BrowserContext) -> Page:
+    """Create a new page for each test."""
 
-    Args:
-        browser: Browser fixture
-
-    Yields:
-        Page instance
-    """
-    page = browser.new_page()
+    page = context.new_page()
     yield page
     page.close()
-
-
-@pytest.fixture(autouse=True)
-def test_setup(page: Page) -> None:
-    """
-    Setup before each test.
-
-    Args:
-        page: Page fixture
-    """
-    # Add any test setup here
-    pass
