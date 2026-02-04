@@ -13,3 +13,5 @@ pytest-playwright>=0.4.0
 pytest-html
 coverage
 
+allure-pytest
+
