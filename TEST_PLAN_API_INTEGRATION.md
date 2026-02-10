@@ -26,6 +26,8 @@
 - Validation: missing fields → returns 400.
 - Failure: PDF generation error → returns 500.
 
+
+
 ---
 
 ### Integration Tests (ERPNext)
