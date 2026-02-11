@@ -91,6 +91,8 @@ All UI tests generate Allure results providing:
 - Trend analysis
 - Historical comparison
 
+
+
 **Local execution example:**
 ```bash
 pytest frontend/ui_tests -v --alluredir=allure-results
